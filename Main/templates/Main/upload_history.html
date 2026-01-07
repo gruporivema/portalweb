@@ -1,200 +1,130 @@
+{% extends "Main/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Histórico de Uploads - Portal Web</title>
-    <link rel="stylesheet" href="{% static 'Menu/css/menu.css' %}" />
-    <style>
-      body {
-        background-color: #1a1a1a !important;
-        color: #ffffff !important;
-      }
-      /* Override menu.css to completely disable hover effects */
-      #sidebar {
-        position: fixed !important;
-        left: 0 !important;
-        top: 0 !important;
-        height: 100vh !important;
-        width: 250px !important;
-        background-color: #2a2a2a !important;
-        transform: none !important;
-        transition: none !important;
-      }
-      .sidebar-header h2 {
-        color: #ff8c00 !important;
-      }
-      .submenu {
-        display: none !important;
-      }
-      .nav-group:hover .submenu {
-        display: none !important;
-        max-height: 0 !important;
-        opacity: 0 !important;
-      }
-      #main-content {
-        margin-left: 250px !important;
-        transition: none !important;
-        background-color: #1a1a1a !important;
-      }
-      /* Disable all hover effects on nav buttons */
-      .nav-button, .nav-link {
-        transition: none !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-        display: flex !important;
-        color: #ffffff !important;
-      }
-      .nav-button:hover, .nav-link:hover {
-        background-color: #3a3a3a !important;
-        transform: none !important;
-      }
-      .nav-button span, .nav-link span {
-        opacity: 1 !important;
-        visibility: visible !important;
-        display: inline !important;
-      }
-      @media (max-width: 768px) {
-        #sidebar {
-          transform: none !important;
-        }
-      }
-    </style>
-  </head>
 
-  <body>
-    <aside id="sidebar">
-      <div class="sidebar-header">
-        <h2>Menu</h2>
-      </div>
+{% block title %}Histórico de Uploads | Grupo Rivema{% endblock %}
 
-      <nav class="sidebar-nav">
-        <div class="nav-group">
-          <a href="{% url 'Main:upload_file' %}" class="nav-button nav-link">
-            <span>Upload de Arquivo</span>
-          </a>
-        </div>
+{% block content %}
 
-        <div class="nav-group">
-          <a href="{% url 'Main:product_list' %}" class="nav-button nav-link">
-            <span>Produtos</span>
-          </a>
-        </div>
+<div class="page-header">
+  <h1>Histórico de Uploads</h1>
+  <p class="subtitle">Acompanhamento dos arquivos importados no sistema</p>
+</div>
 
-        <div class="nav-group">
-          <a href="{% url 'Main:upload_history' %}" class="nav-button nav-link active">
-            <span>Histórico de Uploads</span>
-          </a>
-        </div>
+<div class="card">
 
-        <div class="nav-group">
-          <a href="{% url 'Main:logout' %}" class="nav-button nav-link" style="margin-top: 20px; background-color: #ff8c00;">
-            <span>Sair</span>
-          </a>
-        </div>
-      </nav>
-    </aside>
+  {% if page_obj %}
+    <div style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse;">
+        <thead>
+          <tr style="border-bottom:2px solid var(--primary);">
+            <th>Data/Hora</th>
+            <th>Tipo</th>
+            <th>Arquivo</th>
+            <th>Usuário</th>
+            <th>Status</th>
+            <th>Registros</th>
+            <th>Lote</th>
+          </tr>
+        </thead>
 
-    <main id="main-content" style="margin-left: 250px;">
-      <div style="padding: 30px;">
+        <tbody>
+          {% for upload in page_obj %}
+          <tr style="border-bottom:1px solid var(--border);">
+            <td>{{ upload.uploaded_at|date:"d/m/Y H:i" }}</td>
 
-        <h1 style="color: #ffffff; margin-bottom: 30px;">Histórico de Uploads</h1>
+            <td>{{ upload.get_file_type_display }}</td>
 
-        <div style="background: #2a2a2a; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); overflow: hidden;">
-          {% if page_obj %}
-            <table style="width: 100%; border-collapse: collapse;">
-              <thead>
-                <tr style="background-color: #3a3a3a; border-bottom: 2px solid #ff8c00;">
-                  <th style="padding: 15px; text-align: left; color: #ff8c00; font-weight: 600;">Data/Hora</th>
-                  <th style="padding: 15px; text-align: left; color: #ff8c00; font-weight: 600;">Tipo</th>
-                  <th style="padding: 15px; text-align: left; color: #ff8c00; font-weight: 600;">Arquivo</th>
-                  <th style="padding: 15px; text-align: left; color: #ff8c00; font-weight: 600;">Usuário</th>
-                  <th style="padding: 15px; text-align: left; color: #ff8c00; font-weight: 600;">Status</th>
-                  <th style="padding: 15px; text-align: left; color: #ff8c00; font-weight: 600;">Registros</th>
-                  <th style="padding: 15px; text-align: left; color: #ff8c00; font-weight: 600;">Lote</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for upload in page_obj %}
-                <tr style="border-bottom: 1px solid #3a3a3a;">
-                  <td style="padding: 15px; color: #ffffff;">{{ upload.uploaded_at|date:"d/m/Y H:i" }}</td>
-                  <td style="padding: 15px; color: #b0b0b0;">{{ upload.get_file_type_display }}</td>
-                  <td style="padding: 15px; color: #b0b0b0;">
-                    <a href="{{ upload.file.url }}" style="color: #ff8c00; text-decoration: none;" target="_blank">
-                      {{ upload.file.name|slice:"8:" }}
-                    </a>
-                  </td>
-                  <td style="padding: 15px; color: #b0b0b0;">
-                    {% if upload.uploaded_by %}{{ upload.uploaded_by.username }}{% else %}-{% endif %}
-                  </td>
-                  <td style="padding: 15px;">
-                    <span style="padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;
-                      {% if upload.status == 'COMPLETED' %}background-color: #84cc16; color: #1a1a1a;
-                      {% elif upload.status == 'FAILED' %}background-color: #ef4444; color: #ffffff;
-                      {% elif upload.status == 'PROCESSING' %}background-color: #fbbf24; color: #1a1a1a;
-                      {% else %}background-color: #555555; color: #ffffff;{% endif %}">
-                      {{ upload.get_status_display }}
-                    </span>
-                  </td>
-                  <td style="padding: 15px; color: #b0b0b0;">
-                    {{ upload.processed_records }}/{{ upload.total_records }}
-                  </td>
-                  <td style="padding: 15px; color: #b0b0b0;">
-                    {% if upload.batch %}
-                      <a href="{% url 'Main:product_list' %}?batch={{ upload.batch.batch_code }}" style="color: #ff8c00; text-decoration: none; font-weight: 500;">
-                        {{ upload.batch.batch_code }}
-                      </a>
-                    {% else %}-{% endif %}
-                  </td>
-                </tr>
-                {% if upload.error_message %}
-                <tr style="background-color: #5c1a1a;">
-                  <td colspan="7" style="padding: 10px 15px; color: #fca5a5; font-size: 14px;">
-                    <strong>Erro:</strong> {{ upload.error_message }}
-                  </td>
-                </tr>
-                {% endif %}
-                {% endfor %}
-              </tbody>
-            </table>
+            <td>
+              <a href="{{ upload.file.url }}" target="_blank" style="color:var(--primary);font-weight:600;">
+                {{ upload.file.name|slice:"8:" }}
+              </a>
+            </td>
 
-            <div style="padding: 20px; background-color: #3a3a3a; display: flex; justify-content: space-between; align-items: center;">
-              <div style="color: #b0b0b0;">
-                Mostrando {{ page_obj.start_index }} - {{ page_obj.end_index }} de {{ page_obj.paginator.count }} uploads
-              </div>
+            <td>
+              {% if upload.uploaded_by %}
+                {{ upload.uploaded_by.username }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
 
-              <div style="display: flex; gap: 10px;">
-                {% if page_obj.has_previous %}
-                  <a href="?page=1" style="padding: 8px 12px; background-color: #2a2a2a; border: 1px solid #555555; border-radius: 5px; color: #ffffff; text-decoration: none;">
-                    Primeira
-                  </a>
-                  <a href="?page={{ page_obj.previous_page_number }}" style="padding: 8px 12px; background-color: #2a2a2a; border: 1px solid #555555; border-radius: 5px; color: #ffffff; text-decoration: none;">
-                    Anterior
-                  </a>
-                {% endif %}
-
-                <span style="padding: 8px 12px; background-color: #ff8c00; color: #1a1a1a; border-radius: 5px; font-weight: 600;">
-                  {{ page_obj.number }}
+            <td>
+              {% if upload.status == "COMPLETED" %}
+                <span style="background:#DCFCE7;color:#166534;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600;">
+                  Concluído
                 </span>
+              {% elif upload.status == "PROCESSING" %}
+                <span style="background:#FEF3C7;color:#92400E;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600;">
+                  Processando
+                </span>
+              {% elif upload.status == "FAILED" %}
+                <span style="background:#FEE2E2;color:#991B1B;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600;">
+                  Erro
+                </span>
+              {% else %}
+                <span style="background:#E5E7EB;color:#374151;padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600;">
+                  —
+                </span>
+              {% endif %}
+            </td>
 
-                {% if page_obj.has_next %}
-                  <a href="?page={{ page_obj.next_page_number }}" style="padding: 8px 12px; background-color: #2a2a2a; border: 1px solid #555555; border-radius: 5px; color: #ffffff; text-decoration: none;">
-                    Próxima
-                  </a>
-                  <a href="?page={{ page_obj.paginator.num_pages }}" style="padding: 8px 12px; background-color: #2a2a2a; border: 1px solid #555555; border-radius: 5px; color: #ffffff; text-decoration: none;">
-                    Última
-                  </a>
-                {% endif %}
-              </div>
-            </div>
-          {% else %}
-            <p style="padding: 40px; text-align: center; color: #b0b0b0;">Nenhum upload encontrado.</p>
+            <td>
+              {{ upload.processed_records }}/{{ upload.total_records }}
+            </td>
+
+            <td>
+              {% if upload.batch %}
+                <a href="{% url 'Main:product_list' %}?batch={{ upload.batch.batch_code }}"
+                   style="color:var(--primary);font-weight:600;">
+                  {{ upload.batch.batch_code }}
+                </a>
+              {% else %}
+                —
+              {% endif %}
+            </td>
+          </tr>
+
+          {% if upload.error_message %}
+          <tr>
+            <td colspan="7" style="background:#FEE2E2;color:#991B1B;padding:12px;font-size:14px;">
+              <strong>Erro:</strong> {{ upload.error_message }}
+            </td>
+          </tr>
           {% endif %}
-        </div>
-      </div>
-    </main>
 
-    <script src="{% static 'Menu/js/menu.js' %}"></script>
-  </body>
-</html>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PAGINAÇÃO -->
+    <div style="margin-top:25px;display:flex;justify-content:space-between;align-items:center;">
+      <span class="subtitle">
+        Mostrando {{ page_obj.start_index }} – {{ page_obj.end_index }}
+        de {{ page_obj.paginator.count }} uploads
+      </span>
+
+      <div style="display:flex;gap:10px;">
+        {% if page_obj.has_previous %}
+          <a class="btn-secondary" href="?page=1">Primeira</a>
+          <a class="btn-secondary" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+        {% endif %}
+
+        <span class="btn-primary">{{ page_obj.number }}</span>
+
+        {% if page_obj.has_next %}
+          <a class="btn-secondary" href="?page={{ page_obj.next_page_number }}">Próxima</a>
+          <a class="btn-secondary" href="?page={{ page_obj.paginator.num_pages }}">Última</a>
+        {% endif %}
+      </div>
+    </div>
+
+  {% else %}
+    <p class="subtitle" style="text-align:center;margin-top:40px;">
+      Nenhum upload encontrado.
+    </p>
+  {% endif %}
+
+</div>
+
+{% endblock %}
