@@ -1,0 +1,237 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Portal Web | Grupo Rivema{% endblock %}</title>
+
+  <style>
+    :root {
+      --primary: #0B6E3C;
+      --primary-dark: #064A28;
+      --primary-light: #0F9D58;
+      --secondary: #F2C300;
+      --bg: #F5F7F6;
+      --white: #FFFFFF;
+      --text: #2E2E2E;
+      --muted: #6B7280;
+      --border: #E5E7EB;
+      --shadow: rgba(0, 0, 0, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #F5F7F6 0%, #E8EDE9 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ===== SIDEBAR ===== */
+    #sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 280px;
+      background: linear-gradient(180deg, var(--white) 0%, #FAFBFA 100%);
+      border-right: 1px solid var(--border);
+      padding: 30px 20px;
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05);
+      z-index: 100;
+    }
+
+    .sidebar-header {
+      text-align: center;
+      padding-bottom: 30px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 30px;
+    }
+
+    .sidebar-header h2 {
+      color: var(--primary);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-bottom: 6px;
+    }
+
+    .sidebar-header h2 span {
+      font-weight: 900;
+      color: var(--primary-dark);
+    }
+
+    .sidebar-header p {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .nav-group {
+      margin-bottom: 8px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 500;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .nav-link::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 4px;
+      background: var(--primary);
+      transform: scaleY(0);
+      transition: transform 0.3s ease;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      background: linear-gradient(90deg, rgba(11,110,60,0.12), rgba(11,110,60,0.04));
+      color: var(--primary);
+      transform: translateX(4px);
+    }
+
+    .nav-link:hover::before,
+    .nav-link.active::before {
+      transform: scaleY(1);
+    }
+
+    .nav-link.logout {
+      margin-top: 40px;
+      background: linear-gradient(135deg, rgba(220,38,38,0.08), rgba(220,38,38,0.04));
+      color: #DC2626;
+      border: 1px solid rgba(220,38,38,0.2);
+    }
+
+    .nav-icon {
+      width: 20px;
+      text-align: center;
+    }
+
+    /* ===== MAIN ===== */
+    #main-content {
+      margin-left: 280px;
+      padding: 50px 60px;
+      max-width: 1400px;
+    }
+
+    /* ===== MESSAGES ===== */
+    .message {
+      padding: 16px 20px;
+      border-radius: 12px;
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 500;
+    }
+
+    .message.success {
+      background: linear-gradient(135deg, #DCFCE7, #D1FAE5);
+      color: #166534;
+      border-left: 4px solid #16A34A;
+    }
+
+    .message.error {
+      background: linear-gradient(135deg, #FEE2E2, #FECACA);
+      color: #991B1B;
+      border-left: 4px solid #DC2626;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      #sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+
+      #main-content {
+        margin-left: 0;
+        padding: 30px 20px;
+      }
+    }
+  </style>
+
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <h2>GRUPO <span>RIVEMA</span></h2>
+      <p>Portal Web</p>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <a href="{% url 'Main:upload_file' %}"
+           class="nav-link {% if request.resolver_match.url_name == 'upload_file' %}active{% endif %}">
+          <span class="nav-icon">📤</span>
+          Upload de Arquivo
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <a href="{% url 'Main:product_list' %}"
+           class="nav-link {% if request.resolver_match.url_name == 'product_list' %}active{% endif %}">
+          <span class="nav-icon">📦</span>
+          Produtos
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <a href="{% url 'Main:upload_history' %}"
+           class="nav-link {% if request.resolver_match.url_name == 'upload_history' %}active{% endif %}">
+          <span class="nav-icon">📊</span>
+          Histórico de Uploads
+        </a>
+      </div>
+
+      <div class="nav-group">
+        <a href="{% url 'Main:logout' %}" class="nav-link logout">
+          <span class="nav-icon">🚪</span>
+          Sair
+        </a>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- MAIN -->
+  <main id="main-content">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="message {{ message.tags }}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>
