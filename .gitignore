@@ -1,0 +1,29 @@
+# Arquivos de Sistema Operacional e Editor
+.DS_Store
+.vscode/
+
+# Arquivos de Cache e Compilados do Python
+__pycache__/
+*.pyc
+
+# Ambientes Virtuais
+venv/
+env/
+.env
+
+# Arquivos de Mídia e Logs
+/media/
+*.log
+
+# Banco de Dados
+*.sqlite3
+db.sqlite3
+
+#Enviroment
+.env
+*.env
+
+*.md
+#*.txt
+*.xlsx
+projetoPrePedidos/

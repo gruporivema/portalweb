@@ -1,0 +1,145 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Seleção de Filtros - Portal Web" />
+    <title>Seleção de Filtros - Portal Web</title>
+    <link rel="stylesheet" href="{% static 'Menu/css/menu.css' %}" />
+    <style>
+      body {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+      }
+      /* Override menu.css to completely disable hover effects */
+      #sidebar {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        height: 100vh !important;
+        width: 250px !important;
+        background-color: #2a2a2a !important;
+        transform: none !important;
+        transition: none !important;
+      }
+      .sidebar-header h2 {
+        color: #ff8c00 !important;
+      }
+      .submenu {
+        display: none !important;
+      }
+      .nav-group:hover .submenu {
+        display: none !important;
+        max-height: 0 !important;
+        opacity: 0 !important;
+      }
+      #main-content {
+        margin-left: 250px !important;
+        transition: none !important;
+        background-color: #1a1a1a !important;
+      }
+      /* Disable all hover effects on nav buttons */
+      .nav-button, .nav-link {
+        transition: none !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        display: flex !important;
+        color: #ffffff !important;
+      }
+      .nav-button:hover, .nav-link:hover {
+        background-color: #3a3a3a !important;
+        transform: none !important;
+      }
+      .nav-button span, .nav-link span {
+        opacity: 1 !important;
+        visibility: visible !important;
+        display: inline !important;
+      }
+      @media (max-width: 768px) {
+        #sidebar {
+          transform: none !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <aside id="sidebar" aria-label="Menu lateral de navegação">
+      <div class="sidebar-header">
+        <h2>Menu</h2>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Menu principal">
+        <div class="nav-group">
+          <a href="{% url 'Main:upload_file' %}" class="nav-button nav-link">
+            <span>Upload de Arquivo</span>
+          </a>
+        </div>
+
+        <div class="nav-group">
+          <a href="{% url 'Main:product_list' %}" class="nav-button nav-link">
+            <span>Produtos</span>
+          </a>
+        </div>
+
+        <div class="nav-group">
+          <a href="{% url 'Main:upload_history' %}" class="nav-button nav-link">
+            <span>Histórico de Uploads</span>
+          </a>
+        </div>
+
+        <div class="nav-group">
+          <a href="{% url 'Main:logout' %}" class="nav-button nav-link" style="margin-top: 20px; background-color: #ff8c00;">
+            <span>Sair</span>
+          </a>
+        </div>
+      </nav>
+    </aside>
+
+    <main id="main-content" style="margin-left: 250px;">
+      <div style="padding: 30px; max-width: 800px;">
+
+        <h1 style="color: #ffffff; margin-bottom: 10px;">Informações do Pedido</h1>
+        <p style="color: #b0b0b0; margin-bottom: 30px;">Digite o código do fornecedor para continuar</p>
+
+        <div style="background: #3a3a3a; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ff8c00;">
+          <p style="margin: 0; color: #ffffff; font-weight: 500;">Lote: {{ batch.batch_code }}</p>
+        </div>
+
+        {% if messages %}
+          {% for message in messages %}
+            <div style="padding: 15px 20px; border-radius: 8px; margin-bottom: 20px;
+              {% if message.tags == 'success' %}background-color: #2d5016; color: #a3e635; border-left: 4px solid #84cc16;
+              {% elif message.tags == 'error' %}background-color: #5c1a1a; color: #fca5a5; border-left: 4px solid #ef4444;
+              {% else %}background-color: #3a3a3a; color: #ff8c00; border-left: 4px solid #ff8c00;{% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <div style="background: #3a3a3a; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+          <form method="post">
+            {% csrf_token %}
+
+            <div style="margin-bottom: 25px;">
+              <label for="fornecedor_code" style="display: block; margin-bottom: 8px; color: #ffffff; font-weight: 600;">
+                Código do Fornecedor <span style="color: #b0b0b0; font-weight: 400; font-size: 14px;">(opcional)</span>
+              </label>
+              <input type="text" name="fornecedor_code" id="fornecedor_code" placeholder="Digite o código do fornecedor"
+                      style="width: 100%; padding: 12px; border: 2px solid #555555; border-radius: 6px; font-size: 16px; color: #ffffff; background-color: #2a2a2a; box-sizing: border-box;">
+            </div>
+
+            <div style="display: flex; gap: 15px;">
+              <button type="submit" style="flex: 1; padding: 12px 24px; background: #ff8c00; color: #1a1a1a; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                Continuar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <script src="{% static 'Menu/js/menu.js' %}"></script>
+  </body>
+</html>

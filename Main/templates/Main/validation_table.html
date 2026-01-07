@@ -1,0 +1,291 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Validação de Produtos - Portal Web" />
+    <title>Validação de Produtos - Portal Web</title>
+    <link rel="stylesheet" href="{% static 'Menu/css/menu.css' %}" />
+    <style>
+      body {
+        background-color: #1a1a1a !important;
+        color: #ffffff !important;
+      }
+      /* Override menu.css to completely disable hover effects */
+      #sidebar {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        height: 100vh !important;
+        width: 250px !important;
+        background-color: #2a2a2a !important;
+        transform: none !important;
+        transition: none !important;
+      }
+      .sidebar-header h2 {
+        color: #ff8c00 !important;
+      }
+      .submenu {
+        display: none !important;
+      }
+      .nav-group:hover .submenu {
+        display: none !important;
+        max-height: 0 !important;
+        opacity: 0 !important;
+      }
+      #main-content {
+        margin-left: 250px !important;
+        transition: none !important;
+        background-color: #1a1a1a !important;
+      }
+      /* Disable all hover effects on nav buttons */
+      .nav-button, .nav-link {
+        transition: none !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        display: flex !important;
+        color: #ffffff !important;
+      }
+      .nav-button:hover, .nav-link:hover {
+        background-color: #3a3a3a !important;
+        transform: none !important;
+      }
+      .nav-button span, .nav-link span {
+        opacity: 1 !important;
+        visibility: visible !important;
+        display: inline !important;
+      }
+      @media (max-width: 768px) {
+        #sidebar {
+          transform: none !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <aside id="sidebar" aria-label="Menu lateral de navegação">
+      <div class="sidebar-header">
+        <h2>Menu</h2>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Menu principal">
+        <div class="nav-group">
+          <a href="{% url 'Main:upload_file' %}" class="nav-button nav-link">
+            <span>Upload de Arquivo</span>
+          </a>
+        </div>
+
+        <div class="nav-group">
+          <a href="{% url 'Main:product_list' %}" class="nav-button nav-link">
+            <span>Produtos</span>
+          </a>
+        </div>
+
+        <div class="nav-group">
+          <a href="{% url 'Main:upload_history' %}" class="nav-button nav-link">
+            <span>Histórico de Uploads</span>
+          </a>
+        </div>
+
+        <div class="nav-group">
+          <a href="{% url 'Main:logout' %}" class="nav-button nav-link" style="margin-top: 20px; background-color: #ff8c00;">
+            <span>Sair</span>
+          </a>
+        </div>
+      </nav>
+    </aside>
+
+    <main id="main-content" style="margin-left: 250px;">
+      <div style="padding: 30px; max-width: 1400px;">
+        <div style="margin-bottom: 20px;">
+          <a href="{% url 'Main:filter_selection' batch.batch_code %}" class="back-button" style="display: inline-flex; align-items: center; padding: 10px 20px; background-color: #3a3a3a; color: #ff8c00; text-decoration: none; border-radius: 5px; font-weight: 500; transition: background-color 0.2s ease;">
+            <span style="margin-right: 8px;">←</span>
+            Voltar
+          </a>
+        </div>
+
+        <h1 style="color: #ffffff; margin-bottom: 10px;">Validação de Produtos - Pedido de Compra</h1>
+        <p style="color: #b0b0b0; margin-bottom: 20px;">Valide os produtos importados antes de enviar ao Protheus</p>
+
+        <div style="background: #3a3a3a; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ff8c00; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <p style="margin: 0; color: #ffffff; font-weight: 500;">Lote: {{ batch.batch_code }}</p>
+            <p style="margin: 5px 0 0 0; color: #b0b0b0;">Fornecedor: {{ fornecedor_code }}</p>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <!-- Botão Validar Códigos -->
+            <button id="validateBtn" onclick="validateAllCodes()" style="padding: 10px 20px; background-color: #3b82f6; color: #ffffff; border: none; border-radius: 5px; font-weight: 600; cursor: pointer; transition: background-color 0.2s;">
+              Validar Códigos
+            </button>
+
+            <!-- Botão Submeter ao Protheus - envia apenas produtos VALID -->
+            <a href="{% url 'Main:submit_to_protheus' batch.batch_code %}" style="padding: 10px 20px; background-color: #16a34a; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: 600; display: inline-block;">
+              ✓ Submeter ao Protheus
+            </a>
+          </div>
+        </div>
+
+        {% if messages %}
+          {% for message in messages %}
+            <div style="padding: 15px 20px; border-radius: 8px; margin-bottom: 20px;
+              {% if message.tags == 'success' %}background-color: #2d5016; color: #a3e635; border-left: 4px solid #84cc16;
+              {% elif message.tags == 'error' %}background-color: #5c1a1a; color: #fca5a5; border-left: 4px solid #ef4444;
+              {% else %}background-color: #3a3a3a; color: #ff8c00; border-left: 4px solid #ff8c00;{% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <div style="background: #2a2a2a; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); overflow-x: auto;">
+          {% if products %}
+            <table style="width: 100%; border-collapse: collapse; min-width: 1200px;">
+              <thead>
+                <tr style="background-color: #3a3a3a; border-bottom: 2px solid #ff8c00;">
+                  <th style="padding: 15px; text-align: left; color: #ff8c00; font-weight: 600;">Cód "Bruto"</th>
+                  <th style="padding: 15px; text-align: right; color: #ff8c00; font-weight: 600;">Quant.</th>
+                  <th style="padding: 15px; text-align: right; color: #ff8c00; font-weight: 600;">Valor Unit.</th>
+                  <th style="padding: 15px; text-align: right; color: #ff8c00; font-weight: 600;">Desconto</th>
+                  <th style="padding: 15px; text-align: right; color: #ff8c00; font-weight: 600;">Base Calc ICMS</th>
+                  <th style="padding: 15px; text-align: right; color: #ff8c00; font-weight: 600;">Aliq IPI</th>
+                  <th style="padding: 15px; text-align: right; color: #ff8c00; font-weight: 600;">Aliq ICMS</th>
+                  <th style="padding: 15px; text-align: center; color: #ff8c00; font-weight: 600;">Status</th>
+                  <th style="padding: 15px; text-align: left; color: #ff8c00; font-weight: 600;">Erro</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for product in products %}
+                <tr style="border-bottom: 1px solid #3a3a3a; {% if product.validation_status == 'VALID' %}background-color: #2d5016;{% elif product.validation_status == 'INVALID' %}background-color: #5c1a1a;{% else %}background-color: #4a4a1a;{% endif %}"
+                    data-product-id="{{ product.id }}">
+                  <td style="padding: 15px; color: #ffffff; font-weight: 500;">{{ product.product_code }}</td>
+                  <td style="padding: 15px; color: #b0b0b0; text-align: right;">{{ product.quantity|default:"-" }}</td>
+                  <td style="padding: 15px; color: #b0b0b0; text-align: right;">
+                    {% if product.unit_value %}R$ {{ product.unit_value }}{% else %}-{% endif %}
+                  </td>
+                  <td style="padding: 15px; color: #b0b0b0; text-align: right;">
+                    {% if product.discount %}R$ {{ product.discount }}{% else %}-{% endif %}
+                  </td>
+                  <td style="padding: 15px; color: #b0b0b0; text-align: right;">
+                    {% if product.icms_base %}R$ {{ product.icms_base }}{% else %}-{% endif %}
+                  </td>
+                  <td style="padding: 15px; color: #b0b0b0; text-align: right;">
+                    {% if product.ipi_percentage %}{{ product.ipi_percentage }}%{% else %}-{% endif %}
+                  </td>
+                  <td style="padding: 15px; color: #b0b0b0; text-align: right;">
+                    {% if product.icms_percentage %}{{ product.icms_percentage }}%{% else %}-{% endif %}
+                  </td>
+                  <td style="padding: 15px; text-align: center;">
+                    {% if product.validation_status == 'VALID' %}
+                      <span style="padding: 4px 12px; background-color: #84cc16; color: #1a1a1a; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                        ✓ Validado
+                      </span>
+                    {% elif product.validation_status == 'INVALID' %}
+                      <span style="padding: 4px 12px; background-color: #ef4444; color: #ffffff; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                        ✗ Inválido
+                      </span>
+                    {% else %}
+                      <span style="padding: 4px 12px; background-color: #fbbf24; color: #1a1a1a; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                        ⌛ Pendente
+                      </span>
+                    {% endif %}
+                  </td>
+                  <td style="padding: 15px; color: #fca5a5; font-size: 14px;">
+                    {{ product.validation_error|default:"-" }}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <div style="padding: 40px; text-align: center; color: #b0b0b0;">
+              <p style="font-size: 18px; margin-bottom: 10px;">Nenhum produto encontrado</p>
+              <p>Verifique o lote selecionado.</p>
+            </div>
+          {% endif %}
+        </div>
+
+        <div style="margin-top: 20px; padding: 15px; background: #3a3a3a; border-radius: 8px;">
+          <p style="margin: 0; color: #ffffff; font-weight: 600; margin-bottom: 10px;">Legenda:</p>
+          <div style="display: flex; gap: 20px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 20px; height: 20px; background-color: #2d5016; border-radius: 4px;"></div>
+              <span style="color: #b0b0b0;">Validado (Código existe no Protheus)</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 20px; height: 20px; background-color: #5c1a1a; border-radius: 4px;"></div>
+              <span style="color: #b0b0b0;">Inválido (Código não existe ou erro de validação)</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 20px; height: 20px; background-color: #4a4a1a; border-radius: 4px;"></div>
+              <span style="color: #b0b0b0;">Pendente (Aguardando validação)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="{% static 'Menu/js/menu.js' %}"></script>
+    <script>
+      function validateAllCodes() {
+        const validateBtn = document.getElementById('validateBtn');
+        validateBtn.disabled = true;
+        validateBtn.textContent = 'Validando...';
+
+        const productIds = [];
+        document.querySelectorAll('[data-product-id]').forEach(row => {
+          productIds.push(row.getAttribute('data-product-id'));
+        });
+
+        const formData = new FormData();
+        productIds.forEach(id => {
+          formData.append('product_ids[]', id);
+        });
+
+        // Get CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ?
+                         document.querySelector('[name=csrfmiddlewaretoken]').value :
+                         getCookie('csrftoken');
+
+        fetch('{% url "Main:validate_codes" %}', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrfToken
+          },
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            location.reload();
+          } else {
+            alert('Erro ao validar códigos. Tente novamente.');
+            validateBtn.disabled = false;
+            validateBtn.textContent = 'Validar Códigos';
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Erro ao validar códigos. Tente novamente.');
+          validateBtn.disabled = false;
+          validateBtn.textContent = 'Validar Códigos';
+        });
+      }
+
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+    </script>
+  </body>
+</html>

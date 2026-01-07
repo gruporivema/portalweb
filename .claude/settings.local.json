@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python manage.py startapp:*)",
+      "Bash(python manage.py shell:*)",
+      "Bash(python debug_excel.py:*)"
+    ]
+  }
+}

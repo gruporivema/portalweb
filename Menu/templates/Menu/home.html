@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Portal Web - Sistema de gestão empresarial" />
+    <title>Menu Principal - Portal Web</title>
+    <link rel="stylesheet" href="{% static 'Menu/css/menu.css' %}" />
+    <style>
+      /* Override menu.css to completely disable hover effects */
+      #sidebar {
+        position: fixed !important;
+        left: 0 !important;
+        top: 0 !important;
+        height: 100vh !important;
+        width: 250px !important;
+        background-color: #2d3748 !important;
+        transform: none !important;
+        transition: none !important;
+      }
+      .submenu {
+        display: none !important;
+      }
+      .nav-group:hover .submenu {
+        display: none !important;
+        max-height: 0 !important;
+        opacity: 0 !important;
+      }
+      #main-content {
+        margin-left: 250px !important;
+        transition: none !important;
+      }
+      /* Disable all hover effects on nav buttons */
+      .nav-button, .nav-link {
+        transition: none !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        display: flex !important;
+      }
+      .nav-button:hover, .nav-link:hover {
+        background-color: #718096 !important;
+        transform: none !important;
+      }
+      .nav-button span, .nav-link span {
+        opacity: 1 !important;
+        visibility: visible !important;
+        display: inline !important;
+      }
+      @media (max-width: 768px) {
+        #sidebar {
+          transform: none !important;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <aside id="sidebar" aria-label="Menu lateral de navegação">
+      <div class="sidebar-header">
+        <h2>Menu</h2>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Menu principal">
+        <div class="nav-group">
+          <a href="{% url 'Main:upload_file' %}" class="nav-button nav-link">
+            <span>Upload de Arquivo</span>
+          </a>
+        </div>
+
+        <div class="nav-group">
+          <a href="{% url 'Main:product_list' %}" class="nav-button nav-link">
+            <span>Produtos</span>
+          </a>
+        </div>
+
+        <div class="nav-group">
+          <a href="{% url 'Main:upload_history' %}" class="nav-button nav-link">
+            <span>Histórico de Uploads</span>
+          </a>
+        </div>
+      </nav>
+    </aside>
+
+    <main id="main-content" style="margin-left: 250px;">
+      {# Conteúdo será adicionado aqui conforme necessário #}
+    </main>
+
+    <script src="{% static 'Menu/js/menu.js' %}"></script>
+  </body>
+</html>
