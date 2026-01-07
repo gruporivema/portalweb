@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from decouple import config
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -71,9 +72,9 @@ WSGI_APPLICATION = 'portalweb.wsgi.application'
 # Support both local SQLite and Railway PostgreSQL
 DATABASE_URL = config('DATABASE_URL', default=None)
 
+DATABASE_URL = config('DATABASE_URL', default=None)
+
 if DATABASE_URL:
-    # Railway PostgreSQL configuration
-    import dj_database_url
     DATABASES = {
         'default': dj_database_url.config(
             default=DATABASE_URL,
@@ -82,7 +83,6 @@ if DATABASE_URL:
         )
     }
 else:
-    # Local SQLite configuration
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
