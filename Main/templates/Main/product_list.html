@@ -1,224 +1,520 @@
+<!-- ==============================================
+     PRODUCT_DETAIL.HTML - PADRONIZADO
+     ============================================== -->
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Produtos - Portal Web</title>
-    <link rel="stylesheet" href="{% static 'Menu/css/menu.css' %}" />
+    <title>Detalhes do Produto | Grupo Rivema</title>
     <style>
+      :root {
+        --primary: #0B6E3C;
+        --primary-dark: #064A28;
+        --primary-light: #0F9D58;
+        --secondary: #F2C300;
+        --bg: #F5F7F6;
+        --white: #FFFFFF;
+        --text: #2E2E2E;
+        --muted: #6B7280;
+        --border: #E5E7EB;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
       body {
-        background-color: #1a1a1a !important;
-        color: #ffffff !important;
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(135deg, #F5F7F6 0%, #E8EDE9 100%);
+        color: var(--text);
+        min-height: 100vh;
       }
-      /* Override menu.css to completely disable hover effects */
+
       #sidebar {
-        position: fixed !important;
-        left: 0 !important;
-        top: 0 !important;
-        height: 100vh !important;
-        width: 250px !important;
-        background-color: #2a2a2a !important;
-        transform: none !important;
-        transition: none !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 280px;
+        background: linear-gradient(180deg, var(--white) 0%, #FAFBFA 100%);
+        border-right: 1px solid var(--border);
+        padding: 30px 20px;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05);
+        z-index: 100;
       }
+
+      .sidebar-header {
+        text-align: center;
+        padding-bottom: 30px;
+        border-bottom: 2px solid var(--border);
+        margin-bottom: 30px;
+      }
+
       .sidebar-header h2 {
-        color: #ff8c00 !important;
+        color: var(--primary);
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        margin-bottom: 8px;
       }
-      .submenu {
-        display: none !important;
+
+      .sidebar-header h2 span {
+        font-weight: 900;
+        color: var(--primary-dark);
       }
-      .nav-group:hover .submenu {
-        display: none !important;
-        max-height: 0 !important;
-        opacity: 0 !important;
+
+      .sidebar-header p {
+        font-size: 12px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
       }
+
+      .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: 10px;
+        text-decoration: none;
+        color: var(--text);
+        font-weight: 500;
+        font-size: 15px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 8px;
+      }
+
+      .nav-link::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 4px;
+        background: var(--primary);
+        transform: scaleY(0);
+        transition: transform 0.3s ease;
+      }
+
+      .nav-link:hover {
+        background: linear-gradient(90deg, rgba(11, 110, 60, 0.08) 0%, rgba(11, 110, 60, 0.02) 100%);
+        color: var(--primary);
+        transform: translateX(4px);
+      }
+
+      .nav-link:hover::before {
+        transform: scaleY(1);
+      }
+
+      .nav-link.logout {
+        margin-top: 40px;
+        background: linear-gradient(135deg, rgba(220, 38, 38, 0.08) 0%, rgba(220, 38, 38, 0.04) 100%);
+        color: #DC2626;
+        border: 1px solid rgba(220, 38, 38, 0.2);
+      }
+
+      .nav-link.logout:hover {
+        background: linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(220, 38, 38, 0.08) 100%);
+        border-color: rgba(220, 38, 38, 0.3);
+      }
+
+      .nav-icon {
+        font-size: 20px;
+        opacity: 0.7;
+      }
+
+      .nav-link:hover .nav-icon {
+        opacity: 1;
+      }
+
       #main-content {
-        margin-left: 250px !important;
-        transition: none !important;
-        background-color: #1a1a1a !important;
+        margin-left: 280px;
+        padding: 50px 60px;
+        max-width: 1400px;
       }
-      /* Disable all hover effects on nav buttons */
-      .nav-button, .nav-link {
-        transition: none !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-        display: flex !important;
-        color: #ffffff !important;
+
+      .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        background: var(--white);
+        color: var(--primary);
+        text-decoration: none;
+        border-radius: 10px;
+        font-weight: 600;
+        border: 2px solid var(--border);
+        transition: all 0.3s ease;
+        margin-bottom: 30px;
       }
-      .nav-button:hover, .nav-link:hover {
-        background-color: #3a3a3a !important;
-        transform: none !important;
+
+      .back-button:hover {
+        border-color: var(--primary);
+        background: rgba(11, 110, 60, 0.05);
+        transform: translateX(-4px);
       }
-      .nav-button span, .nav-link span {
-        opacity: 1 !important;
-        visibility: visible !important;
-        display: inline !important;
+
+      .detail-card {
+        background: var(--white);
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        animation: fadeInUp 0.6s ease;
       }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .detail-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 40px;
+        padding-bottom: 30px;
+        border-bottom: 2px solid var(--border);
+      }
+
+      .detail-title h1 {
+        color: var(--primary-dark);
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+
+      .detail-title p {
+        color: var(--muted);
+        font-size: 18px;
+      }
+
+      .status-badge {
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .status-synced {
+        background: linear-gradient(135deg, #DCFCE7 0%, #D1FAE5 100%);
+        color: #166534;
+      }
+
+      .status-pending {
+        background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+        color: #92400E;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 40px;
+      }
+
+      .info-section h3 {
+        color: var(--primary);
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .info-table {
+        width: 100%;
+      }
+
+      .info-table tr {
+        border-bottom: 1px solid var(--border);
+      }
+
+      .info-table td {
+        padding: 14px 0;
+      }
+
+      .info-table td:first-child {
+        color: var(--muted);
+        font-weight: 600;
+        width: 45%;
+      }
+
+      .info-table td:last-child {
+        color: var(--text);
+        font-weight: 500;
+      }
+
+      .observation-section {
+        margin-top: 40px;
+        padding: 25px;
+        background: linear-gradient(135deg, #FAFBFA 0%, #F5F7F6 100%);
+        border-radius: 12px;
+        border-left: 4px solid var(--primary);
+      }
+
+      .observation-section h3 {
+        color: var(--primary);
+        font-size: 18px;
+        margin-bottom: 15px;
+      }
+
+      .observation-section p {
+        color: var(--text);
+        line-height: 1.8;
+      }
+
+      .error-section {
+        margin-top: 40px;
+        padding: 25px;
+        background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+        border-radius: 12px;
+        border-left: 4px solid #DC2626;
+      }
+
+      .error-section h3 {
+        color: #991B1B;
+        font-size: 18px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .error-section p {
+        color: #991B1B;
+        line-height: 1.8;
+      }
+
       @media (max-width: 768px) {
         #sidebar {
-          transform: none !important;
+          width: 100%;
+          height: auto;
+          position: relative;
+        }
+
+        #main-content {
+          margin-left: 0;
+          padding: 30px 20px;
+        }
+
+        .info-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .detail-header {
+          flex-direction: column;
+          gap: 20px;
         }
       }
     </style>
   </head>
 
   <body>
-    <aside id="sidebar" aria-label="Menu lateral de navegação">
+    <aside id="sidebar">
       <div class="sidebar-header">
-        <h2>Menu</h2>
+        <h2>GRUPO <span>RIVEMA</span></h2>
+        <p>Portal Web</p>
       </div>
 
-      <nav class="sidebar-nav" aria-label="Menu principal">
-        <div class="nav-group">
-          <a href="{% url 'Main:upload_file' %}" class="nav-button nav-link">
-            <span>Upload de Arquivo</span>
-          </a>
-        </div>
-
-        <div class="nav-group">
-          <a href="{% url 'Main:product_list' %}" class="nav-button nav-link">
-            <span>Produtos</span>
-          </a>
-        </div>
-
-        <div class="nav-group">
-          <a href="{% url 'Main:upload_history' %}" class="nav-button nav-link">
-            <span>Histórico de Uploads</span>
-          </a>
-        </div>
-
-        <div class="nav-group">
-          <a href="{% url 'Main:logout' %}" class="nav-button nav-link" style="margin-top: 20px; background-color: #ff8c00;">
-            <span>Sair</span>
-          </a>
-        </div>
+      <nav class="sidebar-nav">
+        <a href="{% url 'Main:upload_file' %}" class="nav-link">
+          <span class="nav-icon">📤</span>
+          Upload de Arquivo
+        </a>
+        <a href="{% url 'Main:product_list' %}" class="nav-link">
+          <span class="nav-icon">📦</span>
+          Produtos
+        </a>
+        <a href="{% url 'Main:upload_history' %}" class="nav-link">
+          <span class="nav-icon">📊</span>
+          Histórico de Uploads
+        </a>
+        <a href="{% url 'Main:logout' %}" class="nav-link logout">
+          <span class="nav-icon">🚪</span>
+          Sair
+        </a>
       </nav>
     </aside>
 
-    <main id="main-content" style="margin-left: 250px;">
-      <div style="padding: 30px;">
+    <main id="main-content">
+      <a href="{% url 'Main:product_list' %}" class="back-button">
+        ← Voltar para Produtos
+      </a>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-          <h1 style="color: #ffffff; margin: 0;">Produtos Cadastrados</h1>
-          <a href="{% url 'Main:upload_file' %}" style="padding: 10px 20px; background-color: #ff8c00; color: #1a1a1a; text-decoration: none; border-radius: 5px; font-weight: 600;">
-            + Novo Upload
-          </a>
+      <div class="detail-card">
+        <div class="detail-header">
+          <div class="detail-title">
+            <h1>{{ product.product_code }}</h1>
+            <p>{{ product.description }}</p>
+          </div>
+          <div>
+            {% if product.synced_to_protheus %}
+              <span class="status-badge status-synced">
+                ✓ Sincronizado
+              </span>
+            {% else %}
+              <span class="status-badge status-pending">
+                ⏳ Pendente
+              </span>
+            {% endif %}
+          </div>
         </div>
 
-        <div style="background: #3a3a3a; padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); margin-bottom: 20px;">
-          <form method="get" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 15px; align-items: end;">
-            <div>
-              <label style="display: block; margin-bottom: 5px; color: #ffffff; font-weight: 600;">Buscar</label>
-              <input type="text" name="search" value="{{ search_query }}" placeholder="Código, descrição, fornecedor..." style="width: 100%; padding: 10px; border: 2px solid #555555; border-radius: 5px; background-color: #2a2a2a; color: #ffffff;">
-            </div>
-
-            <div>
-              <label style="display: block; margin-bottom: 5px; color: #ffffff; font-weight: 600;">Lote</label>
-              <select name="batch" style="width: 100%; padding: 10px; border: 2px solid #555555; border-radius: 5px; background-color: #2a2a2a; color: #ffffff;">
-                <option value="">Todos</option>
-                {% for batch in batches %}
-                  <option value="{{ batch.batch_code }}" {% if batch_filter == batch.batch_code %}selected{% endif %}>
-                    {{ batch.batch_code }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-
-            <div>
-              <label style="display: block; margin-bottom: 5px; color: #ffffff; font-weight: 600;">Sincronização</label>
-              <select name="sync" style="width: 100%; padding: 10px; border: 2px solid #555555; border-radius: 5px; background-color: #2a2a2a; color: #ffffff;">
-                <option value="">Todos</option>
-                <option value="synced" {% if sync_filter == 'synced' %}selected{% endif %}>Sincronizados</option>
-                <option value="pending" {% if sync_filter == 'pending' %}selected{% endif %}>Pendentes</option>
-              </select>
-            </div>
-
-            <button type="submit" style="padding: 10px 20px; background-color: #ff8c00; color: #1a1a1a; border: none; border-radius: 5px; font-weight: 600; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-              Filtrar
-            </button>
-          </form>
-        </div>
-
-        <div style="background: #2a2a2a; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); overflow: hidden;">
-          {% if page_obj %}
-            <table style="width: 100%; border-collapse: collapse;">
-              <thead>
-                <tr style="background-color: #3a3a3a; border-bottom: 2px solid #ff8c00;">
-                  <th style="padding: 15px; text-align: left; color: #ff8c00; font-weight: 600;">Código</th>
-                  <th style="padding: 15px; text-align: left; color: #ff8c00; font-weight: 600;">Descrição</th>
-                  <th style="padding: 15px; text-align: left; color: #ff8c00; font-weight: 600;">Preço</th>
-                  <th style="padding: 15px; text-align: left; color: #ff8c00; font-weight: 600;">Estoque</th>
-                  <th style="padding: 15px; text-align: left; color: #ff8c00; font-weight: 600;">Status</th>
-                  <th style="padding: 15px; text-align: left; color: #ff8c00; font-weight: 600;">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for product in page_obj %}
-                <tr style="border-bottom: 1px solid #3a3a3a;">
-                  <td style="padding: 15px; color: #ffffff; font-weight: 500;">{{ product.product_code }}</td>
-                  <td style="padding: 15px; color: #b0b0b0;">{{ product.description|truncatewords:8 }}</td>
-                  <td style="padding: 15px; color: #b0b0b0;">
-                    {% if product.sale_price %}R$ {{ product.sale_price }}{% else %}-{% endif %}
-                  </td>
-                  <td style="padding: 15px; color: #b0b0b0;">{{ product.current_stock }}</td>
-                  <td style="padding: 15px;">
-                    {% if product.synced_to_protheus %}
-                      <span style="padding: 4px 12px; background-color: #84cc16; color: #1a1a1a; border-radius: 12px; font-size: 12px; font-weight: 600;">
-                        Sincronizado
-                      </span>
-                    {% else %}
-                      <span style="padding: 4px 12px; background-color: #fbbf24; color: #1a1a1a; border-radius: 12px; font-size: 12px; font-weight: 600;">
-                        Pendente
-                      </span>
-                    {% endif %}
-                  </td>
-                  <td style="padding: 15px;">
-                    <a href="{% url 'Main:product_detail' product.pk %}" style="color: #ff8c00; text-decoration: none; font-weight: 500;">
-                      Ver Detalhes
-                    </a>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
+        <div class="info-grid">
+          <div class="info-section">
+            <h3>📋 Informações Básicas</h3>
+            <table class="info-table">
+              <tr>
+                <td>Código:</td>
+                <td>{{ product.product_code }}</td>
+              </tr>
+              <tr>
+                <td>Tipo:</td>
+                <td>{{ product.product_type|default:"-" }}</td>
+              </tr>
+              <tr>
+                <td>Grupo:</td>
+                <td>{{ product.product_group|default:"-" }}</td>
+              </tr>
+              <tr>
+                <td>Categoria:</td>
+                <td>{{ product.product_category|default:"-" }}</td>
+              </tr>
+              <tr>
+                <td>Código de Barras:</td>
+                <td>{{ product.barcode|default:"-" }}</td>
+              </tr>
             </table>
+          </div>
 
-            <div style="padding: 20px; background-color: #3a3a3a; display: flex; justify-content: space-between; align-items: center;">
-              <div style="color: #b0b0b0;">
-                Mostrando {{ page_obj.start_index }} - {{ page_obj.end_index }} de {{ page_obj.paginator.count }} produtos
-              </div>
+          <div class="info-section">
+            <h3>💰 Precificação</h3>
+            <table class="info-table">
+              <tr>
+                <td>Preço de Venda:</td>
+                <td style="font-weight: 700; font-size: 18px; color: var(--primary);">
+                  {% if product.sale_price %}R$ {{ product.sale_price }}{% else %}-{% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td>Preço de Custo:</td>
+                <td>
+                  {% if product.cost_price %}R$ {{ product.cost_price }}{% else %}-{% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td>Moeda:</td>
+                <td>{{ product.currency }}</td>
+              </tr>
+            </table>
+          </div>
 
-              <div style="display: flex; gap: 10px;">
-                {% if page_obj.has_previous %}
-                  <a href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if batch_filter %}&batch={{ batch_filter }}{% endif %}{% if sync_filter %}&sync={{ sync_filter }}{% endif %}" style="padding: 8px 12px; background-color: #2a2a2a; border: 1px solid #555555; border-radius: 5px; color: #ffffff; text-decoration: none;">
-                    Primeira
-                  </a>
-                  <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if batch_filter %}&batch={{ batch_filter }}{% endif %}{% if sync_filter %}&sync={{ sync_filter }}{% endif %}" style="padding: 8px 12px; background-color: #2a2a2a; border: 1px solid #555555; border-radius: 5px; color: #ffffff; text-decoration: none;">
-                    Anterior
-                  </a>
-                {% endif %}
+          <div class="info-section">
+            <h3>📦 Estoque</h3>
+            <table class="info-table">
+              <tr>
+                <td>Estoque Atual:</td>
+                <td style="font-weight: 700; color: var(--primary);">{{ product.current_stock }}</td>
+              </tr>
+              <tr>
+                <td>Estoque Mínimo:</td>
+                <td>{{ product.minimum_stock|default:"-" }}</td>
+              </tr>
+              <tr>
+                <td>Armazém:</td>
+                <td>{{ product.warehouse_code|default:"-" }}</td>
+              </tr>
+              <tr>
+                <td>Unidade:</td>
+                <td>{{ product.unit_of_measure|default:"-" }}</td>
+              </tr>
+            </table>
+          </div>
 
-                <span style="padding: 8px 12px; background-color: #ff8c00; color: #1a1a1a; border-radius: 5px; font-weight: 600;">
-                  {{ page_obj.number }}
-                </span>
+          <div class="info-section">
+            <h3>📑 Informações Fiscais</h3>
+            <table class="info-table">
+              <tr>
+                <td>NCM:</td>
+                <td>{{ product.ncm_code|default:"-" }}</td>
+              </tr>
+              <tr>
+                <td>IPI:</td>
+                <td>
+                  {% if product.ipi_percentage %}{{ product.ipi_percentage }}%{% else %}-{% endif %}
+                </td>
+              </tr>
+              <tr>
+                <td>ICMS:</td>
+                <td>
+                  {% if product.icms_percentage %}{{ product.icms_percentage }}%{% else %}-{% endif %}
+                </td>
+              </tr>
+            </table>
+          </div>
 
-                {% if page_obj.has_next %}
-                  <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if batch_filter %}&batch={{ batch_filter }}{% endif %}{% if sync_filter %}&sync={{ sync_filter }}{% endif %}" style="padding: 8px 12px; background-color: #2a2a2a; border: 1px solid #555555; border-radius: 5px; color: #ffffff; text-decoration: none;">
-                    Próxima
-                  </a>
-                  <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if batch_filter %}&batch={{ batch_filter }}{% endif %}{% if sync_filter %}&sync={{ sync_filter }}{% endif %}" style="padding: 8px 12px; background-color: #2a2a2a; border: 1px solid #555555; border-radius: 5px; color: #ffffff; text-decoration: none;">
-                    Última
-                  </a>
-                {% endif %}
-              </div>
-            </div>
-          {% else %}
-            <p style="padding: 40px; text-align: center; color: #b0b0b0;">Nenhum produto encontrado.</p>
-          {% endif %}
+          <div class="info-section">
+            <h3>🏢 Fornecedor</h3>
+            <table class="info-table">
+              <tr>
+                <td>Código:</td>
+                <td>{{ product.supplier_code|default:"-" }}</td>
+              </tr>
+              <tr>
+                <td>Nome:</td>
+                <td>{{ product.supplier_name|default:"-" }}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="info-section">
+            <h3>🔍 Controle</h3>
+            <table class="info-table">
+              <tr>
+                <td>Lote:</td>
+                <td>{{ product.batch.batch_code }}</td>
+              </tr>
+              <tr>
+                <td>Cadastrado em:</td>
+                <td>{{ product.created_at|date:"d/m/Y H:i" }}</td>
+              </tr>
+              {% if product.synced_to_protheus %}
+              <tr>
+                <td>Sincronizado em:</td>
+                <td>{{ product.protheus_sync_date|date:"d/m/Y H:i" }}</td>
+              </tr>
+              {% endif %}
+            </table>
+          </div>
         </div>
+
+        {% if product.observations %}
+          <div class="observation-section">
+            <h3>📝 Observações</h3>
+            <p>{{ product.observations }}</p>
+          </div>
+        {% endif %}
+
+        {% if product.protheus_error %}
+          <div class="error-section">
+            <h3>⚠️ Erro na Sincronização com Protheus</h3>
+            <p>{{ product.protheus_error }}</p>
+          </div>
+        {% endif %}
       </div>
     </main>
-
-    <script src="{% static 'Menu/js/menu.js' %}"></script>
   </body>
 </html>
