@@ -1,487 +1,129 @@
-/* ==========================================
-   Portal Web - Menu Styles
-   ========================================== */
+:root {
+  --primary: #0B6E3C;
+  --primary-dark: #064A28;
+  --primary-light: #0F9D58;
+  --secondary: #F2C300;
+  --bg: #F5F7F6;
+  --white: #FFFFFF;
+  --text: #2E2E2E;
+  --muted: #6B7280;
+  --border: #E5E7EB;
+}
 
-/* --- 1. Reset and Body --- */
+/* RESET */
 * {
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-    margin: 0;
-    padding: 0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f4f4f9;
-    min-height: 100vh;
-    overflow-x: hidden;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: linear-gradient(135deg, #F5F7F6 0%, #E8EDE9 100%);
+  color: var(--text);
+  min-height: 100vh;
 }
 
-/* --- 2. Accessibility Utilities --- */
-.visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-}
-
-/* --- 3. Sidebar (Aside) --- */
+/* SIDEBAR */
 #sidebar {
-    height: 100vh;
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 100;
-    background-color: #4a5568;
-    color: white;
-    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
-    width: 250px;
-    overflow-y: auto;
-    overflow-x: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 280px;
+  background: linear-gradient(180deg, var(--white) 0%, #FAFBFA 100%);
+  border-right: 1px solid var(--border);
+  padding: 30px 20px;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05);
 }
 
-/* --- 4. Sidebar Header --- */
 .sidebar-header {
-    padding: 0;
-    background-color: #2d3748;
+  text-align: center;
+  padding-bottom: 30px;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 30px;
 }
 
 .sidebar-header h2 {
-    padding: 20px;
-    margin: 0;
-    white-space: nowrap;
-    font-size: 1.5em;
-    font-weight: 600;
-    text-align: center;
+  color: var(--primary);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 2px;
 }
 
-/* --- 5. Navigation --- */
-.sidebar-nav {
-    padding-top: 10px;
+.sidebar-header h2 span {
+  color: var(--primary-dark);
+  font-weight: 900;
 }
 
-.nav-group {
-    position: relative;
-    width: 100%;
+.sidebar-header p {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
 }
 
-/* --- 6. Nav Buttons (Primary Level) --- */
-.nav-button {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    padding: 15px 20px;
-    background: none;
-    border: none;
-    color: #ecf0f1;
-    text-decoration: none;
-    white-space: nowrap;
-    cursor: pointer;
-    position: relative;
-    z-index: 2;
-    font-family: inherit;
-    font-size: 1em;
-    text-align: left;
-    transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-/* Nav Link (for anchors that look like buttons) */
 .nav-link {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
 }
 
-.nav-button:hover:not([aria-disabled="true"]) {
-    background-color: #718096;
-    color: #fff;
+.nav-link::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--primary);
+  transform: scaleY(0);
+  transition: transform 0.3s ease;
 }
 
-.nav-button:focus {
-    outline: 2px solid #718096;
-    outline-offset: -2px;
+.nav-link:hover,
+.nav-link.active {
+  background: rgba(11, 110, 60, 0.08);
+  color: var(--primary);
 }
 
-.nav-button[aria-disabled="true"] {
-    cursor: not-allowed;
-    opacity: 0.7;
+.nav-link:hover::before,
+.nav-link.active::before {
+  transform: scaleY(1);
 }
 
-.nav-button[aria-disabled="true"]:hover {
-    background-color: transparent;
-    color: #ecf0f1;
+.nav-link.logout {
+  margin-top: 40px;
+  color: #DC2626;
 }
 
-/* --- 7. Icons --- */
-.nav-button i,
-.disabled-link i {
-    width: 20px;
-    height: 24px;
-    border-radius: 3px;
-    margin-right: 15px;
-    flex-shrink: 0;
-    text-align: center;
-    line-height: 24px;
-    font-style: normal;
-    display: inline-block;
-}
-/*
-.icon-locked,
-.bloqueado {
-    background-color: rgba(63, 59, 59, 0.997);
-}
-*/
-/* --- 8. Nav Button Text --- */
-.nav-button span:not(.visually-hidden),
-.nav-button-submenu span {
-    display: inline;
-}
-
-/* --- 9. Submenu (Secondary Level) --- */
-.submenu {
-    max-height: 0;
-    opacity: 0;
-    overflow: hidden;
-    background-color: #2d3748;
-    box-shadow: inset 0 5px 10px rgba(0, 0, 0, 0.2);
-    width: 100%;
-    transition: max-height 0.4s ease-in-out, opacity 0.3s ease-in-out;
-    transition-delay: 0.1s;
-}
-
-.nav-group:hover .submenu {
-    max-height: 600px;
-    opacity: 1;
-    transition-delay: 0s;
-    overflow: visible;
-}
-
-/* --- 10. Submenu Links --- */
-.submenu a,
-.submenu-link {
-    display: block;
-    padding: 10px 20px 10px 50px;
-    color: #deebec;
-    text-decoration: none;
-    font-size: 0.9em;
-    border-bottom: none;
-    transition: background-color 0.2s ease;
-}
-
-.submenu a:hover,
-.submenu-link:hover {
-    background-color: #718096;
-    color: #fff;
-}
-
-.submenu a:focus,
-.submenu-link:focus {
-    outline: 2px solid #718096;
-    outline-offset: -2px;
-}
-
-/* --- 11. Disabled Links --- */
-.disabled-link {
-    display: block;
-    padding: 10px 20px 10px 50px;
-    color: #666666;
-    font-size: 0.9em;
-    background-color: #cccccc;
-    cursor: not-allowed;
-    opacity: 0.8;
-    user-select: none;
-}
-
-.disabled-link i {
-    margin-right: 8px;
-}
-
-/* --- 12. Submenu Buttons (Tertiary Level) --- */
-.nav-button-submenu {
-    display: block;
-    width: 100%;
-    padding: 10px 20px 10px 50px;
-    background: none;
-    border: none;
-    color: #deebec;
-    text-decoration: none;
-    font-size: 0.9em;
-    cursor: pointer;
-    font-family: inherit;
-    text-align: left;
-    transition: background-color 0.2s ease;
-}
-
-.nav-button-submenu:hover {
-    background-color: #718096;
-    color: #fff;
-}
-
-.nav-button-submenu:focus {
-    outline: 2px solid #718096;
-    outline-offset: -2px;
-}
-
-/* --- 13. Submenu Group (for nested menus) --- */
-.submenu-group {
-    position: relative;
-}
-
-/* --- 14. Sub-Submenu (Third Level) --- */
-.sub-submenu {
-    position: absolute;
-    top: 0;
-    left: 100%;
-    width: 300px;
-    background-color: #1a202c;
-    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.3);
-    z-index: 10;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
-    transform: translateX(10px);
-}
-
-.submenu-group:hover .sub-submenu {
-    opacity: 1;
-    visibility: visible;
-    transform: translateX(0);
-}
-
-.sub-submenu a,
-.sub-submenu .submenu-link {
-    display: block;
-    padding: 10px 15px;
-    color: #deebec;
-    text-decoration: none;
-    font-size: 0.9em;
-    white-space: nowrap;
-    transition: background-color 0.2s ease;
-}
-
-.sub-submenu a:hover,
-.sub-submenu .submenu-link:hover {
-    background-color: #718096;
-    color: #fff;
-}
-
-.sub-submenu a:focus,
-.sub-submenu .submenu-link:focus {
-    outline: 2px solid #718096;
-    outline-offset: -2px;
-}
-
-/* --- 15. Main Content Area --- */
+/* MAIN */
 #main-content {
-    margin-left: 250px;
-    padding: 0;
-    min-height: 100vh;
-    background-color: #f4f4f9;
+  margin-left: 280px;
+  padding: 50px 60px;
 }
 
-/* --- 16. Main Header --- */
-#main-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    background: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    flex-wrap: wrap;
-    gap: 20px;
+/* HEADERS */
+h1 {
+  color: var(--primary-dark);
+  font-size: 36px;
 }
 
-.logo-container {
-    display: flex;
-    align-items: center;
+.subtitle {
+  color: var(--muted);
 }
 
-.logo {
-    max-width: 300px;
-    height: auto;
-    display: block;
-}
-
-.header-title {
-    flex-grow: 1;
-    text-align: center;
-}
-
-.header-title h1 {
-    margin: 0;
-    font-size: 1.8em;
-    color: #333;
-}
-
-/* --- 17. Logout Button --- */
-.logout-button {
-    background-color: #cb3a2a;
-    color: white;
-    padding: 10px 25px;
-    text-decoration: none;
-    border-radius: 50px;
-    font-weight: bold;
-    font-size: 0.95em;
-    transition: background-color 0.2s ease, transform 0.1s ease;
-    white-space: nowrap;
-    display: inline-block;
-}
-
-.logout-button:hover {
-    background-color: #c0392b;
-    transform: translateY(-1px);
-}
-
-.logout-button:focus {
-    outline: 2px solid #c0392b;
-    outline-offset: 2px;
-}
-
-.logout-button:active {
-    transform: translateY(0);
-}
-
-/* --- 18. Welcome Message --- */
-.welcome-message {
-    background: white;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-}
-
-.welcome-message p {
-    margin: 0;
-    color: #333;
-    font-size: 1.1em;
-    line-height: 1.6;
-}
-
-/* --- 19. Legacy Support (for backward compatibility) --- */
-.submenu a.disabled-button,
-.submenu a.disabled-button:hover,
-.sub-submenu a.disabled-button,
-.sub-submenu a.disabled-button:hover {
-    background-color: #cccccc !important;
-    color: #666666 !important;
-    padding-left: 50px !important;
-    cursor: not-allowed;
-    pointer-events: none;
-    opacity: 0.8;
-}
-
-/* --- 20. Mobile Responsive (Tablets and Below) --- */
-@media (max-width: 768px) {
-    #sidebar {
-        width: 250px;
-        transform: translateX(-250px);
-        transition: transform 0.3s ease;
-    }
-
-    #sidebar.sidebar-open {
-        transform: translateX(0);
-    }
-
-    #main-content {
-        margin-left: 0;
-        width: 100%;
-    }
-
-    #main-header {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
-        padding: 15px;
-    }
-
-    .header-title {
-        margin: 0;
-    }
-
-    .header-title h1 {
-        font-size: 1.3em;
-    }
-
-    .logo {
-        max-width: 150px;
-    }
-
-    .logout-button {
-        width: auto;
-        align-self: center;
-        padding: 8px 20px;
-        font-size: 0.85em;
-    }
-
-    .welcome-message {
-        padding: 20px;
-    }
-
-    .welcome-message p {
-        font-size: 1em;
-    }
-
-    /* Overlay effect when sidebar is expanded on mobile */
-    #sidebar:hover::after {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: -1;
-        pointer-events: none;
-    }
-
-    /* Adjust sub-submenu positioning for mobile */
-    .sub-submenu {
-        width: 250px;
-    }
-}
-
-/* --- 21. Small Mobile Devices --- */
-@media (max-width: 480px) {
-    .logo {
-        max-width: 120px;
-    }
-
-    .header-title h1 {
-        font-size: 1.1em;
-    }
-
-    .logout-button {
-        padding: 8px 20px;
-        font-size: 0.9em;
-    }
-
-    .welcome-message p {
-        font-size: 0.95em;
-    }
-
-    .sub-submenu {
-        width: 200px;
-        font-size: 0.85em;
-    }
-}
-
-/* --- 22. Print Styles --- */
-@media print {
-    #sidebar {
-        display: none;
-
-    }
-
-    #main-content {
-        margin-left: 0;
-        width: 100%;
-    }
-
-    .logout-button {
-        display: none;
-    }
+/* CARDS */
+.card {
+  background: var(--white);
+  padding: 40px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 40px rgba(0,0,0,.08);
 }
