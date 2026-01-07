@@ -1,0 +1,157 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Portal Web | Grupo Rivema{% endblock %}</title>
+
+  <!-- CSS PADRÃO -->
+  <style>
+    :root {
+      --primary: #0B6E3C;
+      --primary-dark: #064A28;
+      --primary-light: #0F9D58;
+      --secondary: #F2C300;
+      --bg: #F5F7F6;
+      --white: #FFFFFF;
+      --text: #2E2E2E;
+      --muted: #6B7280;
+      --border: #E5E7EB;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #F5F7F6 0%, #E8EDE9 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+    #sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 280px;
+      background: linear-gradient(180deg, var(--white) 0%, #FAFBFA 100%);
+      border-right: 1px solid var(--border);
+      padding: 30px 20px;
+      box-shadow: 4px 0 20px rgba(0,0,0,.05);
+    }
+
+    .sidebar-header {
+      text-align: center;
+      padding-bottom: 30px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 30px;
+    }
+
+    .sidebar-header h2 {
+      color: var(--primary);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+
+    .sidebar-header h2 span {
+      color: var(--primary-dark);
+      font-weight: 900;
+    }
+
+    .sidebar-header p {
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 500;
+      transition: all .3s ease;
+      position: relative;
+    }
+
+    .nav-link::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--primary);
+      transform: scaleY(0);
+      transition: transform .3s ease;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      background: rgba(11,110,60,.1);
+      color: var(--primary);
+      transform: translateX(4px);
+    }
+
+    .nav-link:hover::before,
+    .nav-link.active::before {
+      transform: scaleY(1);
+    }
+
+    .nav-link.logout {
+      margin-top: 40px;
+      color: #DC2626;
+      background: rgba(220,38,38,.08);
+    }
+
+    /* MAIN */
+    #main-content {
+      margin-left: 280px;
+      padding: 50px 60px;
+      max-width: 1400px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- MENU -->
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <h2>GRUPO <span>RIVEMA</span></h2>
+      <p>Portal Web</p>
+    </div>
+
+    <nav>
+      <a href="{% url 'Main:upload_file' %}" class="nav-link {% if request.path == '/main/upload/' %}active{% endif %}">
+        📤 Upload de Arquivo
+      </a>
+
+      <a href="{% url 'Main:product_list' %}" class="nav-link {% if 'products' in request.path %}active{% endif %}">
+        📦 Produtos
+      </a>
+
+      <a href="{% url 'Main:upload_history' %}" class="nav-link">
+        📊 Histórico de Uploads
+      </a>
+
+      <a href="{% url 'Main:logout' %}" class="nav-link logout">
+        🚪 Sair
+      </a>
+    </nav>
+  </aside>
+
+  <!-- CONTEÚDO -->
+  <main id="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+</body>
+</html>
