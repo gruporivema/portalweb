@@ -5,181 +5,227 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Upload de Arquivos - Portal Web" />
-    <title>Upload de Arquivos - Portal Web</title>
-    <link rel="stylesheet" href="{% static 'Menu/css/menu.css' %}" />
+    <title>Upload de Arquivos | Grupo Rivema</title>
+
     <style>
+      :root {
+        --primary: #0B6E3C;
+        --primary-dark: #064A28;
+        --secondary: #F2C300;
+        --bg: #F5F7F6;
+        --white: #FFFFFF;
+        --text: #2E2E2E;
+        --muted: #6B7280;
+        --border: #D1D5DB;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
       body {
-        background-color: #1a1a1a !important;
-        color: #ffffff !important;
+        font-family: "Segoe UI", Roboto, Arial, sans-serif;
+        background-color: var(--bg);
+        color: var(--text);
       }
-      /* Override menu.css to completely disable hover effects */
+
+      /* SIDEBAR */
       #sidebar {
-        position: fixed !important;
-        left: 0 !important;
-        top: 0 !important;
-        height: 100vh !important;
-        width: 250px !important;
-        background-color: #2a2a2a !important;
-        transform: none !important;
-        transition: none !important;
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 250px;
+        background-color: var(--white);
+        border-right: 1px solid var(--border);
+        padding: 25px 20px;
       }
+
       .sidebar-header h2 {
-        color: #ff8c00 !important;
+        color: var(--primary);
+        font-size: 18px;
+        text-align: center;
+        margin-bottom: 40px;
+        letter-spacing: 1px;
       }
-      .submenu {
-        display: none !important;
+
+      .sidebar-header h2 span {
+        font-weight: 800;
       }
-      .nav-group:hover .submenu {
-        display: none !important;
-        max-height: 0 !important;
-        opacity: 0 !important;
+
+      .sidebar-nav .nav-group {
+        margin-bottom: 12px;
       }
+
+      .nav-link {
+        display: block;
+        padding: 12px 15px;
+        border-radius: 6px;
+        text-decoration: none;
+        color: var(--text);
+        font-weight: 500;
+        transition: background 0.2s ease;
+      }
+
+      .nav-link:hover,
+      .nav-link.active {
+        background-color: rgba(11, 110, 60, 0.1);
+        color: var(--primary);
+      }
+
+      .nav-link.logout {
+        margin-top: 30px;
+        background-color: rgba(220, 38, 38, 0.08);
+        color: #991B1B;
+      }
+
+      .nav-link.logout:hover {
+        background-color: rgba(220, 38, 38, 0.15);
+      }
+
+      /* MAIN */
       #main-content {
-        margin-left: 250px !important;
-        transition: none !important;
-        background-color: #1a1a1a !important;
+        margin-left: 250px;
+        padding: 40px;
       }
-      /* Disable all hover effects on nav buttons */
-      .nav-button, .nav-link {
-        transition: none !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-        display: flex !important;
-        color: #ffffff !important;
+
+      h1 {
+        color: var(--primary);
+        margin-bottom: 8px;
       }
-      .nav-button:hover, .nav-link:hover {
-        background-color: #3a3a3a !important;
-        transform: none !important;
+
+      p.subtitle {
+        color: var(--muted);
+        margin-bottom: 30px;
       }
-      .nav-button span, .nav-link span {
-        opacity: 1 !important;
-        visibility: visible !important;
-        display: inline !important;
+
+      /* CARD */
+      .card {
+        background: var(--white);
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+        margin-bottom: 30px;
       }
-      @media (max-width: 768px) {
-        #sidebar {
-          transform: none !important;
-        }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+      }
+
+      input[type="file"] {
+        padding: 10px;
+      }
+
+      /* BUTTONS */
+      .btn-primary {
+        background-color: var(--primary);
+        color: var(--white);
+        border: none;
+        padding: 12px 30px;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .btn-primary:hover {
+        background-color: var(--primary-dark);
+      }
+
+      .btn-secondary {
+        background-color: #E5E7EB;
+        color: var(--text);
+        padding: 12px 30px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      /* MESSAGES */
+      .message {
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+      }
+
+      .message.success {
+        background: #DCFCE7;
+        color: #166534;
+        border-left: 4px solid #16A34A;
+      }
+
+      .message.error {
+        background: #FEE2E2;
+        color: #991B1B;
+        border-left: 4px solid #DC2626;
+      }
+
+      /* INSTRUCTIONS */
+      .instructions {
+        border-left: 4px solid var(--primary);
+        background: var(--white);
+        padding: 20px;
+        border-radius: 10px;
       }
     </style>
   </head>
 
   <body>
-    <aside id="sidebar" aria-label="Menu lateral de navegação">
+    <aside id="sidebar">
       <div class="sidebar-header">
-        <h2>Menu</h2>
+        <h2>GRUPO <span>RIVEMA</span></h2>
       </div>
 
-      <nav class="sidebar-nav" aria-label="Menu principal">
+      <nav class="sidebar-nav">
         <div class="nav-group">
-          <a href="{% url 'Main:upload_file' %}" class="nav-button nav-link active">
-            <span>Upload de Arquivo</span>
-          </a>
+          <a href="{% url 'Main:upload_file' %}" class="nav-link active">Upload de Arquivo</a>
         </div>
-
         <div class="nav-group">
-          <a href="{% url 'Main:product_list' %}" class="nav-button nav-link">
-            <span>Produtos</span>
-          </a>
+          <a href="{% url 'Main:product_list' %}" class="nav-link">Produtos</a>
         </div>
-
         <div class="nav-group">
-          <a href="{% url 'Main:upload_history' %}" class="nav-button nav-link">
-            <span>Histórico de Uploads</span>
-          </a>
+          <a href="{% url 'Main:upload_history' %}" class="nav-link">Histórico de Uploads</a>
         </div>
-
         <div class="nav-group">
-          <a href="{% url 'Main:logout' %}" class="nav-button nav-link" style="margin-top: 20px; background-color: #ff8c00;">
-            <span>Sair</span>
-          </a>
+          <a href="{% url 'Main:logout' %}" class="nav-link logout">Sair</a>
         </div>
       </nav>
     </aside>
 
-    <main id="main-content" style="margin-left: 250px;">
-      <div style="padding: 30px; max-width: 800px;">
+    <main id="main-content">
+      <h1>Upload de Arquivo</h1>
+      <p class="subtitle">Importação de produtos via Excel ou XML</p>
 
-        <h1 style="color: #ffffff; margin-bottom: 10px;">Upload de Arquivo</h1>
-        <p style="color: #b0b0b0; margin-bottom: 30px;">Faça upload de arquivos Excel ou XML com dados de produtos para cadastro no Protheus</p>
+      {% if messages %}
+        {% for message in messages %}
+          <div class="message {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
 
-        {% if messages %}
-          {% for message in messages %}
-            <div style="padding: 15px 20px; border-radius: 8px; margin-bottom: 20px;
-              {% if message.tags == 'success' %}background-color: #2d5016; color: #a3e635; border-left: 4px solid #84cc16;
-              {% elif message.tags == 'error' %}background-color: #5c1a1a; color: #fca5a5; border-left: 4px solid #ef4444;
-              {% else %}background-color: #3a3a3a; color: #ff8c00; border-left: 4px solid #ff8c00;{% endif %}">
-              {{ message }}
-            </div>
-          {% endfor %}
-        {% endif %}
+      <div class="card">
+        <form method="post" enctype="multipart/form-data">
+          {% csrf_token %}
+          {{ form.as_p }}
 
-        <div style="background: #3a3a3a; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
-          <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
+          <div style="margin-top: 25px; display: flex; gap: 15px;">
+            <button type="submit" class="btn-primary">Fazer Upload</button>
+            <a href="{% url 'Main:product_list' %}" class="btn-secondary">Cancelar</a>
+          </div>
+        </form>
+      </div>
 
-            <div style="margin-bottom: 25px;">
-              <label for="id_file" style="display: block; margin-bottom: 8px; color: #ffffff; font-weight: 600;">
-                {{ form.file.label }}
-              </label>
-              {{ form.file }}
-              {% if form.file.help_text %}
-                <p style="margin-top: 5px; font-size: 14px; color: #b0b0b0;">{{ form.file.help_text }}</p>
-              {% endif %}
-              {% if form.file.errors %}
-                <p style="margin-top: 5px; color: #fca5a5; font-size: 14px;">{{ form.file.errors.0 }}</p>
-              {% endif %}
-            </div>
-
-            <div style="margin-bottom: 25px;">
-              <label style="display: block; margin-bottom: 12px; color: #ffffff; font-weight: 600;">
-                {{ form.file_type.label }}
-              </label>
-              <div style="display: flex; gap: 20px;">
-                {% for radio in form.file_type %}
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    {{ radio.tag }}
-                    <label for="{{ radio.id_for_label }}" style="color: #b0b0b0; cursor: pointer;">
-                      {{ radio.choice_label }}
-                    </label>
-                  </div>
-                {% endfor %}
-              </div>
-              {% if form.file_type.errors %}
-                <p style="margin-top: 5px; color: #fca5a5; font-size: 14px;">{{ form.file_type.errors.0 }}</p>
-              {% endif %}
-            </div>
-
-            {% if form.non_field_errors %}
-              <div style="padding: 15px; background-color: #5c1a1a; color: #fca5a5; border-radius: 5px; margin-bottom: 20px;">
-                {{ form.non_field_errors }}
-              </div>
-            {% endif %}
-
-            <div style="display: flex; gap: 15px;">
-              <button type="submit" style="padding: 12px 30px; background-color: #ff8c00; color: #1a1a1a; border: none; border-radius: 5px; font-weight: 600; cursor: pointer; transition: background-color 0.2s ease;">
-                Fazer Upload
-              </button>
-              <a href="{% url 'Main:product_list' %}" style="padding: 12px 30px; background-color: #2a2a2a; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: 600; transition: background-color 0.2s ease; display: inline-block;">
-                Cancelar
-              </a>
-            </div>
-          </form>
-        </div>
-
-        <div style="background: #2a2a2a; padding: 20px; border-radius: 10px; margin-top: 30px; border-left: 4px solid #ff8c00;">
-          <h3 style="color: #ff8c00; margin-top: 0; margin-bottom: 15px;">Instruções</h3>
-          <ul style="color: #b0b0b0; line-height: 1.8; margin: 0; padding-left: 20px;">
-            <li>Formatos aceitos: Excel (.xlsx, .xls) ou XML (.xml)</li>
-            <li>Tamanho máximo: 10MB</li>
-            <li>O arquivo deve conter as colunas: código, descrição e outras informações do produto</li>
-            <li>Após o upload, os dados serão validados e importados automaticamente</li>
-            <li>Você poderá visualizar e sincronizar os produtos com o Protheus posteriormente</li>
-          </ul>
-        </div>
+      <div class="instructions">
+        <h3>Instruções</h3>
+        <ul>
+          <li>Formatos aceitos: Excel (.xlsx, .xls) ou XML (.xml)</li>
+          <li>Tamanho máximo: 10MB</li>
+          <li>Após o upload os dados serão validados</li>
+          <li>Produtos podem ser sincronizados com o Protheus</li>
+        </ul>
       </div>
     </main>
-
-    <script src="{% static 'Menu/js/menu.js' %}"></script>
   </body>
 </html>
