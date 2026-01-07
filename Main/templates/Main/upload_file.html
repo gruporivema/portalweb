@@ -1,567 +1,228 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Upload de Arquivos - Portal Web" />
-    <title>Upload de Arquivos | Grupo Rivema</title>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <style>
-      :root {
-        --primary: #0B6E3C;
-        --primary-dark: #064A28;
-        --primary-light: #0F9D58;
-        --secondary: #F2C300;
-        --bg: #F5F7F6;
-        --white: #FFFFFF;
-        --text: #2E2E2E;
-        --muted: #6B7280;
-        --border: #E5E7EB;
-        --shadow: rgba(0, 0, 0, 0.1);
-      }
+  <title>{% block title %}Portal Web | Grupo Rivema{% endblock %}</title>
 
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+  <style>
+    :root {
+      --primary: #0B6E3C;
+      --primary-dark: #064A28;
+      --primary-light: #0F9D58;
+      --secondary: #F2C300;
+      --bg: #F5F7F6;
+      --white: #FFFFFF;
+      --text: #2E2E2E;
+      --muted: #6B7280;
+      --border: #E5E7EB;
+      --shadow: rgba(0, 0, 0, 0.08);
+    }
 
-      body {
-        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        background: linear-gradient(135deg, #F5F7F6 0%, #E8EDE9 100%);
-        color: var(--text);
-        min-height: 100vh;
-      }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-      /* SIDEBAR */
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #F5F7F6 0%, #E8EDE9 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+    #sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 280px;
+      background: linear-gradient(180deg, var(--white) 0%, #FAFBFA 100%);
+      border-right: 1px solid var(--border);
+      padding: 30px 20px;
+      box-shadow: 4px 0 20px rgba(0,0,0,0.05);
+      z-index: 100;
+    }
+
+    .sidebar-header {
+      text-align: center;
+      padding-bottom: 30px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 30px;
+    }
+
+    .sidebar-header h2 {
+      color: var(--primary);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+
+    .sidebar-header h2 span {
+      color: var(--primary-dark);
+      font-weight: 900;
+    }
+
+    .sidebar-header p {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--text);
+      font-weight: 500;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .nav-link::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 4px;
+      background: var(--primary);
+      transform: scaleY(0);
+      transition: transform 0.3s ease;
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      background: rgba(11, 110, 60, 0.1);
+      color: var(--primary);
+      transform: translateX(4px);
+    }
+
+    .nav-link:hover::before,
+    .nav-link.active::before {
+      transform: scaleY(1);
+    }
+
+    .nav-link.logout {
+      margin-top: 40px;
+      background: rgba(220, 38, 38, 0.08);
+      color: #DC2626;
+    }
+
+    /* MAIN */
+    #main-content {
+      margin-left: 280px;
+      padding: 50px 60px;
+      max-width: 1400px;
+    }
+
+    /* HEADERS */
+    .page-header {
+      margin-bottom: 40px;
+    }
+
+    .page-header h1 {
+      font-size: 36px;
+      color: var(--primary-dark);
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    /* CARD */
+    .card {
+      background: var(--white);
+      padding: 40px;
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 40px var(--shadow);
+      margin-bottom: 30px;
+    }
+
+    /* MESSAGES */
+    .message {
+      padding: 16px 20px;
+      border-radius: 12px;
+      margin-bottom: 25px;
+      font-weight: 500;
+    }
+
+    .message.success {
+      background: #DCFCE7;
+      color: #166534;
+      border-left: 4px solid #16A34A;
+    }
+
+    .message.error {
+      background: #FEE2E2;
+      color: #991B1B;
+      border-left: 4px solid #DC2626;
+    }
+
+    /* RESPONSIVO */
+    @media (max-width: 768px) {
       #sidebar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        height: 100vh;
-        width: 280px;
-        background: linear-gradient(180deg, var(--white) 0%, #FAFBFA 100%);
-        border-right: 1px solid var(--border);
-        padding: 30px 20px;
-        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.05);
-        z-index: 100;
-      }
-
-      .sidebar-header {
-        text-align: center;
-        padding-bottom: 30px;
-        border-bottom: 2px solid var(--border);
-        margin-bottom: 30px;
-      }
-
-      .sidebar-header h2 {
-        color: var(--primary);
-        font-size: 22px;
-        font-weight: 700;
-        letter-spacing: 2px;
-        margin-bottom: 8px;
-      }
-
-      .sidebar-header h2 span {
-        font-weight: 900;
-        color: var(--primary-dark);
-      }
-
-      .sidebar-header p {
-        font-size: 12px;
-        color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: 1px;
-      }
-
-      .sidebar-nav .nav-group {
-        margin-bottom: 8px;
-      }
-
-      .nav-link {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 14px 16px;
-        border-radius: 10px;
-        text-decoration: none;
-        color: var(--text);
-        font-weight: 500;
-        font-size: 15px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
-        overflow: hidden;
-      }
-
-      .nav-link::before {
-        content: '';
-        position: absolute;
-        left: 0;
-        top: 0;
-        height: 100%;
-        width: 4px;
-        background: var(--primary);
-        transform: scaleY(0);
-        transition: transform 0.3s ease;
-      }
-
-      .nav-link:hover {
-        background: linear-gradient(90deg, rgba(11, 110, 60, 0.08) 0%, rgba(11, 110, 60, 0.02) 100%);
-        color: var(--primary);
-        transform: translateX(4px);
-      }
-
-      .nav-link:hover::before,
-      .nav-link.active::before {
-        transform: scaleY(1);
-      }
-
-      .nav-link.active {
-        background: linear-gradient(90deg, rgba(11, 110, 60, 0.12) 0%, rgba(11, 110, 60, 0.04) 100%);
-        color: var(--primary);
-        font-weight: 600;
-      }
-
-      .nav-link.logout {
-        margin-top: 40px;
-        background: linear-gradient(135deg, rgba(220, 38, 38, 0.08) 0%, rgba(220, 38, 38, 0.04) 100%);
-        color: #DC2626;
-        border: 1px solid rgba(220, 38, 38, 0.2);
-      }
-
-      .nav-link.logout:hover {
-        background: linear-gradient(135deg, rgba(220, 38, 38, 0.15) 0%, rgba(220, 38, 38, 0.08) 100%);
-        border-color: rgba(220, 38, 38, 0.3);
-      }
-
-      .nav-icon {
-        width: 20px;
-        height: 20px;
-        opacity: 0.7;
-      }
-
-      .nav-link:hover .nav-icon,
-      .nav-link.active .nav-icon {
-        opacity: 1;
-      }
-
-      /* MAIN */
-      #main-content {
-        margin-left: 280px;
-        padding: 50px 60px;
-        max-width: 1400px;
-      }
-
-      .page-header {
-        margin-bottom: 40px;
-        animation: slideDown 0.5s ease;
-      }
-
-      @keyframes slideDown {
-        from {
-          opacity: 0;
-          transform: translateY(-20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      h1 {
-        color: var(--primary-dark);
-        font-size: 36px;
-        font-weight: 700;
-        margin-bottom: 8px;
-        line-height: 1.2;
-      }
-
-      p.subtitle {
-        color: var(--muted);
-        font-size: 16px;
-        font-weight: 400;
-      }
-
-      /* CARD */
-      .card {
-        background: var(--white);
-        padding: 40px;
-        border-radius: 16px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-        margin-bottom: 30px;
-        border: 1px solid var(--border);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        animation: fadeInUp 0.6s ease 0.1s both;
-      }
-
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .card:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12);
-      }
-
-      .upload-zone {
-        border: 2px dashed var(--border);
-        border-radius: 12px;
-        padding: 50px 30px;
-        text-align: center;
-        background: linear-gradient(135deg, #FAFBFA 0%, #F5F7F6 100%);
-        transition: all 0.3s ease;
-        cursor: pointer;
-        position: relative;
-      }
-
-      .upload-zone:hover {
-        border-color: var(--primary);
-        background: linear-gradient(135deg, rgba(11, 110, 60, 0.03) 0%, rgba(11, 110, 60, 0.01) 100%);
-      }
-
-      .upload-icon {
-        width: 80px;
-        height: 80px;
-        margin: 0 auto 20px;
-        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 36px;
-      }
-
-      .upload-text h3 {
-        color: var(--primary);
-        font-size: 20px;
-        margin-bottom: 8px;
-      }
-
-      .upload-text p {
-        color: var(--muted);
-        font-size: 14px;
-      }
-
-      label {
-        display: block;
-        margin-bottom: 10px;
-        font-weight: 600;
-        color: var(--primary-dark);
-        font-size: 15px;
-      }
-
-      input[type="file"] {
         width: 100%;
-        padding: 14px;
-        border: 2px solid var(--border);
-        border-radius: 10px;
-        font-size: 14px;
-        transition: all 0.3s ease;
-        background: var(--white);
-      }
-
-      input[type="file"]:hover {
-        border-color: var(--primary);
-      }
-
-      input[type="file"]:focus {
-        outline: none;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 4px rgba(11, 110, 60, 0.1);
-      }
-
-      /* BUTTONS */
-      .button-group {
-        margin-top: 30px;
-        display: flex;
-        gap: 15px;
-        align-items: center;
-      }
-
-      .btn-primary {
-        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-        color: var(--white);
-        border: none;
-        padding: 14px 35px;
-        border-radius: 10px;
-        font-weight: 600;
-        font-size: 15px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(11, 110, 60, 0.3);
-        position: relative;
-        overflow: hidden;
-      }
-
-      .btn-primary::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.2);
-        transition: left 0.5s ease;
-      }
-
-      .btn-primary:hover::before {
-        left: 100%;
-      }
-
-      .btn-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(11, 110, 60, 0.4);
-      }
-
-      .btn-primary:active {
-        transform: translateY(0);
-      }
-
-      .btn-secondary {
-        background-color: var(--white);
-        color: var(--text);
-        padding: 14px 35px;
-        border-radius: 10px;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 15px;
-        border: 2px solid var(--border);
-        display: inline-block;
-        transition: all 0.3s ease;
-      }
-
-      .btn-secondary:hover {
-        background-color: var(--bg);
-        border-color: var(--muted);
-        transform: translateY(-2px);
-      }
-
-      /* MESSAGES */
-      .message {
-        padding: 16px 20px;
-        border-radius: 12px;
-        margin-bottom: 25px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        font-weight: 500;
-        animation: slideDown 0.4s ease;
-      }
-
-      .message::before {
-        content: '';
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        flex-shrink: 0;
-      }
-
-      .message.success {
-        background: linear-gradient(135deg, #DCFCE7 0%, #D1FAE5 100%);
-        color: #166534;
-        border-left: 4px solid #16A34A;
-      }
-
-      .message.success::before {
-        background: #16A34A;
-        content: '✓';
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-      }
-
-      .message.error {
-        background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
-        color: #991B1B;
-        border-left: 4px solid #DC2626;
-      }
-
-      .message.error::before {
-        background: #DC2626;
-        content: '!';
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-      }
-
-      /* INSTRUCTIONS */
-      .instructions {
-        border-left: 4px solid var(--primary);
-        background: var(--white);
-        padding: 30px;
-        border-radius: 16px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-        animation: fadeInUp 0.6s ease 0.2s both;
-      }
-
-      .instructions h3 {
-        color: var(--primary-dark);
-        font-size: 20px;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .instructions h3::before {
-        content: 'ℹ';
-        width: 32px;
-        height: 32px;
-        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-weight: bold;
-      }
-
-      .instructions ul {
-        list-style: none;
-        padding: 0;
-      }
-
-      .instructions ul li {
-        padding: 12px 0;
-        padding-left: 30px;
-        position: relative;
-        color: var(--text);
-        font-size: 15px;
-        line-height: 1.6;
-      }
-
-      .instructions ul li::before {
-        content: '→';
-        position: absolute;
-        left: 0;
-        color: var(--primary);
-        font-weight: bold;
-      }
-
-      .instructions ul li:not(:last-child) {
+        height: auto;
+        border-right: none;
         border-bottom: 1px solid var(--border);
       }
 
-      /* RESPONSIVE */
-      @media (max-width: 768px) {
-        #sidebar {
-          width: 100%;
-          height: auto;
-          position: relative;
-          border-right: none;
-          border-bottom: 1px solid var(--border);
-        }
-
-        #main-content {
-          margin-left: 0;
-          padding: 30px 20px;
-        }
-
-        .button-group {
-          flex-direction: column;
-        }
-
-        .btn-primary,
-        .btn-secondary {
-          width: 100%;
-          text-align: center;
-        }
+      #main-content {
+        margin-left: 0;
+        padding: 30px 20px;
       }
-    </style>
-  </head>
+    }
+  </style>
 
-  <body>
-    <aside id="sidebar">
-      <div class="sidebar-header">
-        <h2>GRUPO <span>RIVEMA</span></h2>
-        <p>Portal Web</p>
-      </div>
+  {% block extra_css %}{% endblock %}
+</head>
 
-      <nav class="sidebar-nav">
-        <div class="nav-group">
-          <a href="{% url 'Main:upload_file' %}" class="nav-link active">
-            <span class="nav-icon">📤</span>
-            Upload de Arquivo
-          </a>
-        </div>
-        <div class="nav-group">
-          <a href="{% url 'Main:product_list' %}" class="nav-link">
-            <span class="nav-icon">📦</span>
-            Produtos
-          </a>
-        </div>
-        <div class="nav-group">
-          <a href="{% url 'Main:upload_history' %}" class="nav-link">
-            <span class="nav-icon">📊</span>
-            Histórico de Uploads
-          </a>
-        </div>
-        <div class="nav-group">
-          <a href="{% url 'Main:logout' %}" class="nav-link logout">
-            <span class="nav-icon">🚪</span>
-            Sair
-          </a>
-        </div>
-      </nav>
-    </aside>
+<body>
 
-    <main id="main-content">
-      <div class="page-header">
-        <h1>Upload de Arquivo</h1>
-        <p class="subtitle">Importação de produtos via Excel ou XML</p>
-      </div>
+  <!-- MENU -->
+  <aside id="sidebar">
+    <div class="sidebar-header">
+      <h2>GRUPO <span>RIVEMA</span></h2>
+      <p>Portal Web</p>
+    </div>
 
-      {% if messages %}
-        {% for message in messages %}
-          <div class="message {{ message.tags }}">{{ message }}</div>
-        {% endfor %}
-      {% endif %}
+    <nav>
+      <a href="{% url 'Main:upload_file' %}" class="nav-link {% if 'upload' in request.path %}active{% endif %}">
+        📤 Upload de Arquivo
+      </a>
 
-      <div class="card">
-        <form method="post" enctype="multipart/form-data">
-          {% csrf_token %}
-          
-          <div class="upload-zone">
-            <div class="upload-icon">📁</div>
-            <div class="upload-text">
-              <h3>Selecione seu arquivo</h3>
-              <p>Arraste e solte ou clique para selecionar</p>
-            </div>
-          </div>
-          
-          <div style="margin-top: 25px;">
-            {{ form.as_p }}
-          </div>
+      <a href="{% url 'Main:product_list' %}" class="nav-link {% if 'products' in request.path %}active{% endif %}">
+        📦 Produtos
+      </a>
 
-          <div class="button-group">
-            <button type="submit" class="btn-primary">Fazer Upload</button>
-            <a href="{% url 'Main:product_list' %}" class="btn-secondary">Cancelar</a>
-          </div>
-        </form>
-      </div>
+      <a href="{% url 'Main:upload_history' %}" class="nav-link {% if 'history' in request.path %}active{% endif %}">
+        📊 Histórico de Uploads
+      </a>
 
-      <div class="instructions">
-        <h3>Instruções</h3>
-        <ul>
-          <li>Formatos aceitos: Excel (.xlsx, .xls) ou XML (.xml)</li>
-          <li>Tamanho máximo: 10MB por arquivo</li>
-          <li>Após o upload os dados serão validados automaticamente</li>
-          <li>Produtos podem ser sincronizados com o sistema Protheus</li>
-        </ul>
-      </div>
-    </main>
-  </body>
+      <a href="{% url 'Main:logout' %}" class="nav-link logout">
+        🚪 Sair
+      </a>
+    </nav>
+  </aside>
+
+  <!-- CONTEÚDO -->
+  <main id="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+</body>
 </html>
