@@ -1,274 +1,350 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Detalhes do Produto - Portal Web</title>
-    <link rel="stylesheet" href="{% static 'Menu/css/menu.css' %}" />
-    <style>
-      body {
-        background-color: #1a1a1a !important;
-        color: #ffffff !important;
-      }
-      /* Override menu.css to completely disable hover effects */
-      #sidebar {
-        position: fixed !important;
-        left: 0 !important;
-        top: 0 !important;
-        height: 100vh !important;
-        width: 250px !important;
-        background-color: #2a2a2a !important;
-        transform: none !important;
-        transition: none !important;
-      }
-      .sidebar-header h2 {
-        color: #ff8c00 !important;
-      }
-      .submenu {
-        display: none !important;
-      }
-      .nav-group:hover .submenu {
-        display: none !important;
-        max-height: 0 !important;
-        opacity: 0 !important;
-      }
-      #main-content {
-        margin-left: 250px !important;
-        transition: none !important;
-        background-color: #1a1a1a !important;
-      }
-      /* Disable all hover effects on nav buttons */
-      .nav-button, .nav-link {
-        transition: none !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-        display: flex !important;
-        color: #ffffff !important;
-      }
-      .nav-button:hover, .nav-link:hover {
-        background-color: #3a3a3a !important;
-        transform: none !important;
-      }
-      .nav-button span, .nav-link span {
-        opacity: 1 !important;
-        visibility: visible !important;
-        display: inline !important;
-      }
-      @media (max-width: 768px) {
-        #sidebar {
-          transform: none !important;
-        }
-      }
-    </style>
-  </head>
 
-  <body>
-    <aside id="sidebar" aria-label="Menu lateral de navegação">
-      <div class="sidebar-header">
-        <h2>Menu</h2>
-      </div>
+{% block title %}Detalhes do Produto{% endblock %}
 
-      <nav class="sidebar-nav" aria-label="Menu principal">
-        <div class="nav-group">
-          <a href="{% url 'Main:upload_file' %}" class="nav-button nav-link">
-            <span>Upload de Arquivo</span>
-          </a>
-        </div>
+{% block description %}Visualize todos os detalhes do produto {{ product.product_code }} - Portal Web Grupo Rivema{% endblock %}
 
-        <div class="nav-group">
-          <a href="{% url 'Main:product_list' %}" class="nav-button nav-link">
-            <span>Produtos</span>
-          </a>
-        </div>
+{% block extra_css %}
+<style>
+  .back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: var(--white);
+    color: var(--primary);
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: 600;
+    border: 2px solid var(--border);
+    transition: all 0.3s ease;
+    margin-bottom: 30px;
+  }
 
-        <div class="nav-group">
-          <a href="{% url 'Main:upload_history' %}" class="nav-button nav-link">
-            <span>Histórico de Uploads</span>
-          </a>
-        </div>
+  .back-button:hover {
+    border-color: var(--primary);
+    background: rgba(11, 110, 60, 0.05);
+    transform: translateX(-4px);
+  }
 
-        <div class="nav-group">
-          <a href="{% url 'Main:logout' %}" class="nav-button nav-link" style="margin-top: 20px; background-color: #ff8c00;">
-            <span>Sair</span>
-          </a>
-        </div>
-      </nav>
-    </aside>
+  .detail-card {
+    background: var(--white);
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    max-width: 1200px;
+  }
 
-    <main id="main-content" style="margin-left: 250px;">
-      <div style="padding: 30px; max-width: 1000px;">
-        <div style="margin-bottom: 20px;">
-          <a href="{% url 'Main:product_list' %}" class="back-button" style="display: inline-flex; align-items: center; padding: 10px 20px; background-color: #3a3a3a; color: #ff8c00; text-decoration: none; border-radius: 5px; font-weight: 500; transition: background-color 0.2s ease;">
-            <span style="margin-right: 8px;">←</span>
-            Voltar para Produtos
-          </a>
-        </div>
+  .detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 2px solid var(--border);
+  }
 
-        <div style="background: #3a3a3a; padding: 30px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
-          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 30px;">
-            <div>
-              <h1 style="color: #ffffff; margin: 0 0 10px 0;">{{ product.product_code }}</h1>
-              <p style="color: #b0b0b0; font-size: 18px; margin: 0;">{{ product.description }}</p>
-            </div>
-            <div>
-              {% if product.synced_to_protheus %}
-                <span style="padding: 8px 16px; background-color: #84cc16; color: #1a1a1a; border-radius: 20px; font-weight: 600;">
-                  ✓ Sincronizado
-                </span>
-              {% else %}
-                <span style="padding: 8px 16px; background-color: #fbbf24; color: #1a1a1a; border-radius: 20px; font-weight: 600;">
-                  ⏳ Pendente
-                </span>
-              {% endif %}
-            </div>
-          </div>
+  .detail-title h1 {
+    color: var(--primary-dark);
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
 
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-            <div>
-              <h3 style="color: #ff8c00; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #555555;">Informações Básicas</h3>
-              <table style="width: 100%;">
-                <tr>
-                  <td style="padding: 10px 0; color: #b0b0b0; font-weight: 600;">Código:</td>
-                  <td style="padding: 10px 0; color: #ffffff;">{{ product.product_code }}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 0; color: #b0b0b0; font-weight: 600;">Tipo:</td>
-                  <td style="padding: 10px 0; color: #ffffff;">{{ product.product_type|default:"-" }}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 0; color: #b0b0b0; font-weight: 600;">Grupo:</td>
-                  <td style="padding: 10px 0; color: #ffffff;">{{ product.product_group|default:"-" }}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 0; color: #b0b0b0; font-weight: 600;">Categoria:</td>
-                  <td style="padding: 10px 0; color: #ffffff;">{{ product.product_category|default:"-" }}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 0; color: #b0b0b0; font-weight: 600;">Código de Barras:</td>
-                  <td style="padding: 10px 0; color: #ffffff;">{{ product.barcode|default:"-" }}</td>
-                </tr>
-              </table>
-            </div>
+  .detail-title p {
+    color: var(--muted);
+    font-size: 18px;
+  }
 
-            <div>
-              <h3 style="color: #ff8c00; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #555555;">Precificação</h3>
-              <table style="width: 100%;">
-                <tr>
-                  <td style="padding: 10px 0; color: #b0b0b0; font-weight: 600;">Preço de Venda:</td>
-                  <td style="padding: 10px 0; color: #ffffff; font-weight: 600; font-size: 18px;">
-                    {% if product.sale_price %}R$ {{ product.sale_price }}{% else %}-{% endif %}
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 0; color: #b0b0b0; font-weight: 600;">Preço de Custo:</td>
-                  <td style="padding: 10px 0; color: #ffffff;">
-                    {% if product.cost_price %}R$ {{ product.cost_price }}{% else %}-{% endif %}
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 0; color: #b0b0b0; font-weight: 600;">Moeda:</td>
-                  <td style="padding: 10px 0; color: #ffffff;">{{ product.currency }}</td>
-                </tr>
-              </table>
-            </div>
+  .status-badge {
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-            <div>
-              <h3 style="color: #ff8c00; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #555555;">Estoque</h3>
-              <table style="width: 100%;">
-                <tr>
-                  <td style="padding: 10px 0; color: #b0b0b0; font-weight: 600;">Estoque Atual:</td>
-                  <td style="padding: 10px 0; color: #ffffff; font-weight: 600;">{{ product.current_stock }}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 0; color: #b0b0b0; font-weight: 600;">Estoque Mínimo:</td>
-                  <td style="padding: 10px 0; color: #ffffff;">{{ product.minimum_stock|default:"-" }}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 0; color: #b0b0b0; font-weight: 600;">Armazém:</td>
-                  <td style="padding: 10px 0; color: #ffffff;">{{ product.warehouse_code|default:"-" }}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 0; color: #b0b0b0; font-weight: 600;">Unidade:</td>
-                  <td style="padding: 10px 0; color: #ffffff;">{{ product.unit_of_measure|default:"-" }}</td>
-                </tr>
-              </table>
-            </div>
+  .status-synced {
+    background: linear-gradient(135deg, #DCFCE7 0%, #D1FAE5 100%);
+    color: #166534;
+  }
 
-            <div>
-              <h3 style="color: #ff8c00; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #555555;">Informações Fiscais</h3>
-              <table style="width: 100%;">
-                <tr>
-                  <td style="padding: 10px 0; color: #b0b0b0; font-weight: 600;">NCM:</td>
-                  <td style="padding: 10px 0; color: #ffffff;">{{ product.ncm_code|default:"-" }}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 0; color: #b0b0b0; font-weight: 600;">IPI:</td>
-                  <td style="padding: 10px 0; color: #ffffff;">
-                    {% if product.ipi_percentage %}{{ product.ipi_percentage }}%{% else %}-{% endif %}
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 0; color: #b0b0b0; font-weight: 600;">ICMS:</td>
-                  <td style="padding: 10px 0; color: #ffffff;">
-                    {% if product.icms_percentage %}{{ product.icms_percentage }}%{% else %}-{% endif %}
-                  </td>
-                </tr>
-              </table>
-            </div>
+  .status-pending {
+    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+    color: #92400E;
+  }
 
-            <div>
-              <h3 style="color: #ff8c00; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #555555;">Fornecedor</h3>
-              <table style="width: 100%;">
-                <tr>
-                  <td style="padding: 10px 0; color: #b0b0b0; font-weight: 600;">Código:</td>
-                  <td style="padding: 10px 0; color: #ffffff;">{{ product.supplier_code|default:"-" }}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 0; color: #b0b0b0; font-weight: 600;">Nome:</td>
-                  <td style="padding: 10px 0; color: #ffffff;">{{ product.supplier_name|default:"-" }}</td>
-                </tr>
-              </table>
-            </div>
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 40px;
+  }
 
-            <div>
-              <h3 style="color: #ff8c00; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #555555;">Controle</h3>
-              <table style="width: 100%;">
-                <tr>
-                  <td style="padding: 10px 0; color: #b0b0b0; font-weight: 600;">Lote:</td>
-                  <td style="padding: 10px 0; color: #ffffff;">{{ product.batch.batch_code }}</td>
-                </tr>
-                <tr>
-                  <td style="padding: 10px 0; color: #b0b0b0; font-weight: 600;">Cadastrado em:</td>
-                  <td style="padding: 10px 0; color: #ffffff;">{{ product.created_at|date:"d/m/Y H:i" }}</td>
-                </tr>
-                {% if product.synced_to_protheus %}
-                <tr>
-                  <td style="padding: 10px 0; color: #b0b0b0; font-weight: 600;">Sincronizado em:</td>
-                  <td style="padding: 10px 0; color: #ffffff;">{{ product.protheus_sync_date|date:"d/m/Y H:i" }}</td>
-                </tr>
-                {% endif %}
-              </table>
-            </div>
-          </div>
+  .info-section h3 {
+    color: var(--primary);
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
 
-          {% if product.observations %}
-            <div style="margin-top: 30px;">
-              <h3 style="color: #ff8c00; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #555555;">Observações</h3>
-              <p style="color: #b0b0b0; line-height: 1.6;">{{ product.observations }}</p>
-            </div>
-          {% endif %}
+  .info-table {
+    width: 100%;
+  }
 
-          {% if product.protheus_error %}
-            <div style="margin-top: 30px; padding: 15px; background-color: #5c1a1a; border-left: 4px solid #fca5a5; border-radius: 5px;">
-              <h3 style="color: #fca5a5; margin: 0 0 10px 0;">Erro na Sincronização com Protheus</h3>
-              <p style="color: #fca5a5; margin: 0;">{{ product.protheus_error }}</p>
-            </div>
-          {% endif %}
-        </div>
-      </div>
-    </main>
+  .info-table tr {
+    border-bottom: 1px solid var(--border);
+  }
 
-    <script src="{% static 'Menu/js/menu.js' %}"></script>
-  </body>
-</html>
+  .info-table tr:last-child {
+    border-bottom: none;
+  }
+
+  .info-table td {
+    padding: 14px 0;
+  }
+
+  .info-table td:first-child {
+    color: var(--muted);
+    font-weight: 600;
+    width: 45%;
+  }
+
+  .info-table td:last-child {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .observation-section {
+    margin-top: 40px;
+    padding: 25px;
+    background: linear-gradient(135deg, #FAFBFA 0%, #F5F7F6 100%);
+    border-radius: 12px;
+    border-left: 4px solid var(--primary);
+  }
+
+  .observation-section h3 {
+    color: var(--primary);
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+
+  .observation-section p {
+    color: var(--text);
+    line-height: 1.8;
+  }
+
+  .error-section {
+    margin-top: 40px;
+    padding: 25px;
+    background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+    border-radius: 12px;
+    border-left: 4px solid #DC2626;
+  }
+
+  .error-section h3 {
+    color: #991B1B;
+    font-size: 18px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .error-section p {
+    color: #991B1B;
+    line-height: 1.8;
+  }
+
+  @media (max-width: 768px) {
+    .detail-card {
+      padding: 25px;
+    }
+
+    .info-grid {
+      grid-template-columns: 1fr;
+      gap: 30px;
+    }
+
+    .detail-header {
+      flex-direction: column;
+      gap: 20px;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="{% url 'Main:product_list' %}" class="back-button">
+  ← Voltar para Produtos
+</a>
+
+<div class="detail-card">
+  <div class="detail-header">
+    <div class="detail-title">
+      <h1>{{ product.product_code }}</h1>
+      <p>{{ product.description }}</p>
+    </div>
+    <div>
+      {% if product.synced_to_protheus %}
+        <span class="status-badge status-synced">
+          ✓ Sincronizado
+        </span>
+      {% else %}
+        <span class="status-badge status-pending">
+          ⏳ Pendente
+        </span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-section">
+      <h3>📋 Informações Básicas</h3>
+      <table class="info-table">
+        <tr>
+          <td>Código:</td>
+          <td>{{ product.product_code }}</td>
+        </tr>
+        <tr>
+          <td>Tipo:</td>
+          <td>{{ product.product_type|default:"-" }}</td>
+        </tr>
+        <tr>
+          <td>Grupo:</td>
+          <td>{{ product.product_group|default:"-" }}</td>
+        </tr>
+        <tr>
+          <td>Categoria:</td>
+          <td>{{ product.product_category|default:"-" }}</td>
+        </tr>
+        <tr>
+          <td>Código de Barras:</td>
+          <td>{{ product.barcode|default:"-" }}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="info-section">
+      <h3>💰 Precificação</h3>
+      <table class="info-table">
+        <tr>
+          <td>Preço de Venda:</td>
+          <td style="font-weight: 700; font-size: 18px; color: var(--primary);">
+            {% if product.sale_price %}R$ {{ product.sale_price }}{% else %}-{% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>Preço de Custo:</td>
+          <td>
+            {% if product.cost_price %}R$ {{ product.cost_price }}{% else %}-{% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>Moeda:</td>
+          <td>{{ product.currency }}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="info-section">
+      <h3>📦 Estoque</h3>
+      <table class="info-table">
+        <tr>
+          <td>Estoque Atual:</td>
+          <td style="font-weight: 700; color: var(--primary);">{{ product.current_stock }}</td>
+        </tr>
+        <tr>
+          <td>Estoque Mínimo:</td>
+          <td>{{ product.minimum_stock|default:"-" }}</td>
+        </tr>
+        <tr>
+          <td>Armazém:</td>
+          <td>{{ product.warehouse_code|default:"-" }}</td>
+        </tr>
+        <tr>
+          <td>Unidade:</td>
+          <td>{{ product.unit_of_measure|default:"-" }}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="info-section">
+      <h3>📑 Informações Fiscais</h3>
+      <table class="info-table">
+        <tr>
+          <td>NCM:</td>
+          <td>{{ product.ncm_code|default:"-" }}</td>
+        </tr>
+        <tr>
+          <td>IPI:</td>
+          <td>
+            {% if product.ipi_percentage %}{{ product.ipi_percentage }}%{% else %}-{% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td>ICMS:</td>
+          <td>
+            {% if product.icms_percentage %}{{ product.icms_percentage }}%{% else %}-{% endif %}
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="info-section">
+      <h3>🏢 Fornecedor</h3>
+      <table class="info-table">
+        <tr>
+          <td>Código:</td>
+          <td>{{ product.supplier_code|default:"-" }}</td>
+        </tr>
+        <tr>
+          <td>Nome:</td>
+          <td>{{ product.supplier_name|default:"-" }}</td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="info-section">
+      <h3>🔍 Controle</h3>
+      <table class="info-table">
+        <tr>
+          <td>Lote:</td>
+          <td>{{ product.batch.batch_code }}</td>
+        </tr>
+        <tr>
+          <td>Cadastrado em:</td>
+          <td>{{ product.created_at|date:"d/m/Y H:i" }}</td>
+        </tr>
+        {% if product.synced_to_protheus %}
+        <tr>
+          <td>Sincronizado em:</td>
+          <td>{{ product.protheus_sync_date|date:"d/m/Y H:i" }}</td>
+        </tr>
+        {% endif %}
+      </table>
+    </div>
+  </div>
+
+  {% if product.observations %}
+    <div class="observation-section">
+      <h3>📝 Observações</h3>
+      <p>{{ product.observations }}</p>
+    </div>
+  {% endif %}
+
+  {% if product.protheus_error %}
+    <div class="error-section">
+      <h3>⚠️ Erro na Sincronização com Protheus</h3>
+      <p>{{ product.protheus_error }}</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
