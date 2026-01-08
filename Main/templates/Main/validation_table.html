@@ -1,291 +1,460 @@
+{% extends 'Main/base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Validação de Produtos - Portal Web" />
-    <title>Validação de Produtos - Portal Web</title>
-    <link rel="stylesheet" href="{% static 'Menu/css/menu.css' %}" />
-    <style>
-      body {
-        background-color: #1a1a1a !important;
-        color: #ffffff !important;
+
+{% block title %}Validação de Produtos{% endblock %}
+
+{% block description %}Valide os produtos importados antes de enviar ao Protheus - Portal Web Grupo Rivema{% endblock %}
+
+{% block extra_css %}
+<style>
+  .back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    background: var(--white);
+    color: var(--primary);
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: 600;
+    border: 2px solid var(--border);
+    transition: all 0.3s ease;
+    margin-bottom: 30px;
+  }
+
+  .back-button:hover {
+    border-color: var(--primary);
+    background: rgba(11, 110, 60, 0.05);
+    transform: translateX(-4px);
+  }
+
+  .info-card {
+    background: linear-gradient(135deg, var(--white) 0%, #FAFBFA 100%);
+    padding: 25px 30px;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    border-left: 4px solid var(--primary);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .info-card-content p {
+    margin: 0;
+    font-weight: 500;
+  }
+
+  .info-card-content p:first-child {
+    color: var(--primary-dark);
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  .info-card-content p:last-child {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 5px;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .btn-validate {
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+    color: var(--white);
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+  }
+
+  .btn-validate:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  }
+
+  .btn-validate:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .btn-submit {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: var(--white);
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(11, 110, 60, 0.3);
+  }
+
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(11, 110, 60, 0.4);
+  }
+
+  .table-wrapper {
+    background: var(--white);
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+    overflow-x: auto;
+    margin-bottom: 30px;
+  }
+
+  .validation-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1200px;
+  }
+
+  .validation-table thead tr {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  }
+
+  .validation-table th {
+    padding: 18px 16px;
+    text-align: left;
+    color: var(--white);
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .validation-table th:nth-child(2),
+  .validation-table th:nth-child(3),
+  .validation-table th:nth-child(4),
+  .validation-table th:nth-child(5),
+  .validation-table th:nth-child(6),
+  .validation-table th:nth-child(7) {
+    text-align: right;
+  }
+
+  .validation-table th:nth-child(8) {
+    text-align: center;
+  }
+
+  .validation-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: all 0.2s ease;
+  }
+
+  .validation-table tbody tr.row-valid {
+    background: linear-gradient(135deg, #DCFCE7 0%, #F0FDF4 100%);
+  }
+
+  .validation-table tbody tr.row-invalid {
+    background: linear-gradient(135deg, #FEE2E2 0%, #FEF2F2 100%);
+  }
+
+  .validation-table tbody tr.row-pending {
+    background: linear-gradient(135deg, #FEF3C7 0%, #FEFCE8 100%);
+  }
+
+  .validation-table tbody tr:hover {
+    transform: scale(1.002);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .validation-table td {
+    padding: 16px;
+    color: var(--text);
+    font-size: 14px;
+  }
+
+  .validation-table td:nth-child(2),
+  .validation-table td:nth-child(3),
+  .validation-table td:nth-child(4),
+  .validation-table td:nth-child(5),
+  .validation-table td:nth-child(6),
+  .validation-table td:nth-child(7) {
+    text-align: right;
+  }
+
+  .validation-table td:nth-child(8) {
+    text-align: center;
+  }
+
+  .validation-table td:first-child {
+    font-weight: 600;
+  }
+
+  .status-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .status-valid {
+    background: #16A34A;
+    color: var(--white);
+  }
+
+  .status-invalid {
+    background: #DC2626;
+    color: var(--white);
+  }
+
+  .status-pending {
+    background: #F59E0B;
+    color: var(--white);
+  }
+
+  .error-text {
+    color: #991B1B;
+    font-size: 13px;
+  }
+
+  .legend-card {
+    background: var(--white);
+    padding: 25px 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  }
+
+  .legend-card p {
+    font-weight: 600;
+    color: var(--primary-dark);
+    margin-bottom: 15px;
+  }
+
+  .legend-items {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .legend-color {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+
+  .legend-color.valid {
+    background: linear-gradient(135deg, #DCFCE7 0%, #D1FAE5 100%);
+  }
+
+  .legend-color.invalid {
+    background: linear-gradient(135deg, #FEE2E2 0%, #FECACA 100%);
+  }
+
+  .legend-color.pending {
+    background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  }
+
+  .legend-item span {
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .empty-state {
+    padding: 80px 40px;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  .empty-state h3 {
+    font-size: 24px;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+
+  @media (max-width: 768px) {
+    .info-card {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .action-buttons {
+      width: 100%;
+      flex-direction: column;
+    }
+
+    .btn-validate,
+    .btn-submit {
+      width: 100%;
+      text-align: center;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="{% url 'Main:filter_selection' batch.batch_code %}" class="back-button">
+  ← Voltar
+</a>
+
+<div class="page-header">
+  <h1 class="page-title">Validação de Produtos - Pedido de Compra</h1>
+  <p class="page-subtitle">Valide os produtos importados antes de enviar ao Protheus</p>
+</div>
+
+<div class="info-card">
+  <div class="info-card-content">
+    <p>Lote: {{ batch.batch_code }}</p>
+    <p>Fornecedor: {{ fornecedor_code }}</p>
+  </div>
+  <div class="action-buttons">
+    <button id="validateBtn" onclick="validateAllCodes()" class="btn-validate">
+      ✓ Validar Códigos
+    </button>
+    <a href="{% url 'Main:submit_to_protheus' batch.batch_code %}" class="btn-submit">
+      → Submeter ao Protheus
+    </a>
+  </div>
+</div>
+
+<div class="table-wrapper">
+  {% if products %}
+    <table class="validation-table">
+      <thead>
+        <tr>
+          <th>Cód "Bruto"</th>
+          <th>Quant.</th>
+          <th>Valor Unit.</th>
+          <th>Desconto</th>
+          <th>Base Calc ICMS</th>
+          <th>Aliq IPI</th>
+          <th>Aliq ICMS</th>
+          <th>Status</th>
+          <th>Erro</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in products %}
+        <tr class="{% if product.validation_status == 'VALID' %}row-valid{% elif product.validation_status == 'INVALID' %}row-invalid{% else %}row-pending{% endif %}"
+            data-product-id="{{ product.id }}">
+          <td>{{ product.product_code }}</td>
+          <td>{{ product.quantity|default:"-" }}</td>
+          <td>{% if product.unit_value %}R$ {{ product.unit_value }}{% else %}-{% endif %}</td>
+          <td>{% if product.discount %}R$ {{ product.discount }}{% else %}-{% endif %}</td>
+          <td>{% if product.icms_base %}R$ {{ product.icms_base }}{% else %}-{% endif %}</td>
+          <td>{% if product.ipi_percentage %}{{ product.ipi_percentage }}%{% else %}-{% endif %}</td>
+          <td>{% if product.icms_percentage %}{{ product.icms_percentage }}%{% else %}-{% endif %}</td>
+          <td>
+            {% if product.validation_status == 'VALID' %}
+              <span class="status-badge status-valid">✓ Validado</span>
+            {% elif product.validation_status == 'INVALID' %}
+              <span class="status-badge status-invalid">✗ Inválido</span>
+            {% else %}
+              <span class="status-badge status-pending">⏳ Pendente</span>
+            {% endif %}
+          </td>
+          <td class="error-text">{{ product.validation_error|default:"-" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="empty-state">
+      <h3>📦 Nenhum produto encontrado</h3>
+      <p>Verifique o lote selecionado.</p>
+    </div>
+  {% endif %}
+</div>
+
+<div class="legend-card">
+  <p>📋 Legenda:</p>
+  <div class="legend-items">
+    <div class="legend-item">
+      <div class="legend-color valid"></div>
+      <span>Validado (Código existe no Protheus)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color invalid"></div>
+      <span>Inválido (Código não existe ou erro)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color pending"></div>
+      <span>Pendente (Aguardando validação)</span>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function validateAllCodes() {
+    const validateBtn = document.getElementById('validateBtn');
+    validateBtn.disabled = true;
+    validateBtn.textContent = 'Validando...';
+
+    const productIds = [];
+    document.querySelectorAll('[data-product-id]').forEach(row => {
+      productIds.push(row.getAttribute('data-product-id'));
+    });
+
+    const formData = new FormData();
+    productIds.forEach(id => {
+      formData.append('product_ids[]', id);
+    });
+
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ?
+                     document.querySelector('[name=csrfmiddlewaretoken]').value :
+                     getCookie('csrftoken');
+
+    fetch('{% url "Main:validate_codes" %}', {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrfToken
+      },
+      body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        location.reload();
+      } else {
+        alert('Erro ao validar códigos. Tente novamente.');
+        validateBtn.disabled = false;
+        validateBtn.textContent = '✓ Validar Códigos';
       }
-      /* Override menu.css to completely disable hover effects */
-      #sidebar {
-        position: fixed !important;
-        left: 0 !important;
-        top: 0 !important;
-        height: 100vh !important;
-        width: 250px !important;
-        background-color: #2a2a2a !important;
-        transform: none !important;
-        transition: none !important;
-      }
-      .sidebar-header h2 {
-        color: #ff8c00 !important;
-      }
-      .submenu {
-        display: none !important;
-      }
-      .nav-group:hover .submenu {
-        display: none !important;
-        max-height: 0 !important;
-        opacity: 0 !important;
-      }
-      #main-content {
-        margin-left: 250px !important;
-        transition: none !important;
-        background-color: #1a1a1a !important;
-      }
-      /* Disable all hover effects on nav buttons */
-      .nav-button, .nav-link {
-        transition: none !important;
-        opacity: 1 !important;
-        visibility: visible !important;
-        display: flex !important;
-        color: #ffffff !important;
-      }
-      .nav-button:hover, .nav-link:hover {
-        background-color: #3a3a3a !important;
-        transform: none !important;
-      }
-      .nav-button span, .nav-link span {
-        opacity: 1 !important;
-        visibility: visible !important;
-        display: inline !important;
-      }
-      @media (max-width: 768px) {
-        #sidebar {
-          transform: none !important;
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Erro ao validar códigos. Tente novamente.');
+      validateBtn.disabled = false;
+      validateBtn.textContent = '✓ Validar Códigos';
+    });
+  }
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
         }
       }
-    </style>
-  </head>
-
-  <body>
-    <aside id="sidebar" aria-label="Menu lateral de navegação">
-      <div class="sidebar-header">
-        <h2>Menu</h2>
-      </div>
-
-      <nav class="sidebar-nav" aria-label="Menu principal">
-        <div class="nav-group">
-          <a href="{% url 'Main:upload_file' %}" class="nav-button nav-link">
-            <span>Upload de Arquivo</span>
-          </a>
-        </div>
-
-        <div class="nav-group">
-          <a href="{% url 'Main:product_list' %}" class="nav-button nav-link">
-            <span>Produtos</span>
-          </a>
-        </div>
-
-        <div class="nav-group">
-          <a href="{% url 'Main:upload_history' %}" class="nav-button nav-link">
-            <span>Histórico de Uploads</span>
-          </a>
-        </div>
-
-        <div class="nav-group">
-          <a href="{% url 'Main:logout' %}" class="nav-button nav-link" style="margin-top: 20px; background-color: #ff8c00;">
-            <span>Sair</span>
-          </a>
-        </div>
-      </nav>
-    </aside>
-
-    <main id="main-content" style="margin-left: 250px;">
-      <div style="padding: 30px; max-width: 1400px;">
-        <div style="margin-bottom: 20px;">
-          <a href="{% url 'Main:filter_selection' batch.batch_code %}" class="back-button" style="display: inline-flex; align-items: center; padding: 10px 20px; background-color: #3a3a3a; color: #ff8c00; text-decoration: none; border-radius: 5px; font-weight: 500; transition: background-color 0.2s ease;">
-            <span style="margin-right: 8px;">←</span>
-            Voltar
-          </a>
-        </div>
-
-        <h1 style="color: #ffffff; margin-bottom: 10px;">Validação de Produtos - Pedido de Compra</h1>
-        <p style="color: #b0b0b0; margin-bottom: 20px;">Valide os produtos importados antes de enviar ao Protheus</p>
-
-        <div style="background: #3a3a3a; padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ff8c00; display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <p style="margin: 0; color: #ffffff; font-weight: 500;">Lote: {{ batch.batch_code }}</p>
-            <p style="margin: 5px 0 0 0; color: #b0b0b0;">Fornecedor: {{ fornecedor_code }}</p>
-          </div>
-          <div style="display: flex; gap: 10px;">
-            <!-- Botão Validar Códigos -->
-            <button id="validateBtn" onclick="validateAllCodes()" style="padding: 10px 20px; background-color: #3b82f6; color: #ffffff; border: none; border-radius: 5px; font-weight: 600; cursor: pointer; transition: background-color 0.2s;">
-              Validar Códigos
-            </button>
-
-            <!-- Botão Submeter ao Protheus - envia apenas produtos VALID -->
-            <a href="{% url 'Main:submit_to_protheus' batch.batch_code %}" style="padding: 10px 20px; background-color: #16a34a; color: #ffffff; text-decoration: none; border-radius: 5px; font-weight: 600; display: inline-block;">
-              ✓ Submeter ao Protheus
-            </a>
-          </div>
-        </div>
-
-        {% if messages %}
-          {% for message in messages %}
-            <div style="padding: 15px 20px; border-radius: 8px; margin-bottom: 20px;
-              {% if message.tags == 'success' %}background-color: #2d5016; color: #a3e635; border-left: 4px solid #84cc16;
-              {% elif message.tags == 'error' %}background-color: #5c1a1a; color: #fca5a5; border-left: 4px solid #ef4444;
-              {% else %}background-color: #3a3a3a; color: #ff8c00; border-left: 4px solid #ff8c00;{% endif %}">
-              {{ message }}
-            </div>
-          {% endfor %}
-        {% endif %}
-
-        <div style="background: #2a2a2a; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); overflow-x: auto;">
-          {% if products %}
-            <table style="width: 100%; border-collapse: collapse; min-width: 1200px;">
-              <thead>
-                <tr style="background-color: #3a3a3a; border-bottom: 2px solid #ff8c00;">
-                  <th style="padding: 15px; text-align: left; color: #ff8c00; font-weight: 600;">Cód "Bruto"</th>
-                  <th style="padding: 15px; text-align: right; color: #ff8c00; font-weight: 600;">Quant.</th>
-                  <th style="padding: 15px; text-align: right; color: #ff8c00; font-weight: 600;">Valor Unit.</th>
-                  <th style="padding: 15px; text-align: right; color: #ff8c00; font-weight: 600;">Desconto</th>
-                  <th style="padding: 15px; text-align: right; color: #ff8c00; font-weight: 600;">Base Calc ICMS</th>
-                  <th style="padding: 15px; text-align: right; color: #ff8c00; font-weight: 600;">Aliq IPI</th>
-                  <th style="padding: 15px; text-align: right; color: #ff8c00; font-weight: 600;">Aliq ICMS</th>
-                  <th style="padding: 15px; text-align: center; color: #ff8c00; font-weight: 600;">Status</th>
-                  <th style="padding: 15px; text-align: left; color: #ff8c00; font-weight: 600;">Erro</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for product in products %}
-                <tr style="border-bottom: 1px solid #3a3a3a; {% if product.validation_status == 'VALID' %}background-color: #2d5016;{% elif product.validation_status == 'INVALID' %}background-color: #5c1a1a;{% else %}background-color: #4a4a1a;{% endif %}"
-                    data-product-id="{{ product.id }}">
-                  <td style="padding: 15px; color: #ffffff; font-weight: 500;">{{ product.product_code }}</td>
-                  <td style="padding: 15px; color: #b0b0b0; text-align: right;">{{ product.quantity|default:"-" }}</td>
-                  <td style="padding: 15px; color: #b0b0b0; text-align: right;">
-                    {% if product.unit_value %}R$ {{ product.unit_value }}{% else %}-{% endif %}
-                  </td>
-                  <td style="padding: 15px; color: #b0b0b0; text-align: right;">
-                    {% if product.discount %}R$ {{ product.discount }}{% else %}-{% endif %}
-                  </td>
-                  <td style="padding: 15px; color: #b0b0b0; text-align: right;">
-                    {% if product.icms_base %}R$ {{ product.icms_base }}{% else %}-{% endif %}
-                  </td>
-                  <td style="padding: 15px; color: #b0b0b0; text-align: right;">
-                    {% if product.ipi_percentage %}{{ product.ipi_percentage }}%{% else %}-{% endif %}
-                  </td>
-                  <td style="padding: 15px; color: #b0b0b0; text-align: right;">
-                    {% if product.icms_percentage %}{{ product.icms_percentage }}%{% else %}-{% endif %}
-                  </td>
-                  <td style="padding: 15px; text-align: center;">
-                    {% if product.validation_status == 'VALID' %}
-                      <span style="padding: 4px 12px; background-color: #84cc16; color: #1a1a1a; border-radius: 12px; font-size: 12px; font-weight: 600;">
-                        ✓ Validado
-                      </span>
-                    {% elif product.validation_status == 'INVALID' %}
-                      <span style="padding: 4px 12px; background-color: #ef4444; color: #ffffff; border-radius: 12px; font-size: 12px; font-weight: 600;">
-                        ✗ Inválido
-                      </span>
-                    {% else %}
-                      <span style="padding: 4px 12px; background-color: #fbbf24; color: #1a1a1a; border-radius: 12px; font-size: 12px; font-weight: 600;">
-                        ⌛ Pendente
-                      </span>
-                    {% endif %}
-                  </td>
-                  <td style="padding: 15px; color: #fca5a5; font-size: 14px;">
-                    {{ product.validation_error|default:"-" }}
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          {% else %}
-            <div style="padding: 40px; text-align: center; color: #b0b0b0;">
-              <p style="font-size: 18px; margin-bottom: 10px;">Nenhum produto encontrado</p>
-              <p>Verifique o lote selecionado.</p>
-            </div>
-          {% endif %}
-        </div>
-
-        <div style="margin-top: 20px; padding: 15px; background: #3a3a3a; border-radius: 8px;">
-          <p style="margin: 0; color: #ffffff; font-weight: 600; margin-bottom: 10px;">Legenda:</p>
-          <div style="display: flex; gap: 20px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <div style="width: 20px; height: 20px; background-color: #2d5016; border-radius: 4px;"></div>
-              <span style="color: #b0b0b0;">Validado (Código existe no Protheus)</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <div style="width: 20px; height: 20px; background-color: #5c1a1a; border-radius: 4px;"></div>
-              <span style="color: #b0b0b0;">Inválido (Código não existe ou erro de validação)</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <div style="width: 20px; height: 20px; background-color: #4a4a1a; border-radius: 4px;"></div>
-              <span style="color: #b0b0b0;">Pendente (Aguardando validação)</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <script src="{% static 'Menu/js/menu.js' %}"></script>
-    <script>
-      function validateAllCodes() {
-        const validateBtn = document.getElementById('validateBtn');
-        validateBtn.disabled = true;
-        validateBtn.textContent = 'Validando...';
-
-        const productIds = [];
-        document.querySelectorAll('[data-product-id]').forEach(row => {
-          productIds.push(row.getAttribute('data-product-id'));
-        });
-
-        const formData = new FormData();
-        productIds.forEach(id => {
-          formData.append('product_ids[]', id);
-        });
-
-        // Get CSRF token
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ?
-                         document.querySelector('[name=csrfmiddlewaretoken]').value :
-                         getCookie('csrftoken');
-
-        fetch('{% url "Main:validate_codes" %}', {
-          method: 'POST',
-          headers: {
-            'X-CSRFToken': csrfToken
-          },
-          body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.success) {
-            location.reload();
-          } else {
-            alert('Erro ao validar códigos. Tente novamente.');
-            validateBtn.disabled = false;
-            validateBtn.textContent = 'Validar Códigos';
-          }
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          alert('Erro ao validar códigos. Tente novamente.');
-          validateBtn.disabled = false;
-          validateBtn.textContent = 'Validar Códigos';
-        });
-      }
-
-      function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-          const cookies = document.cookie.split(';');
-          for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-              break;
-            }
-          }
-        }
-        return cookieValue;
-      }
-    </script>
-  </body>
-</html>
+    }
+    return cookieValue;
+  }
+</script>
+{% endblock %}
