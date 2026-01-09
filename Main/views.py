@@ -352,10 +352,38 @@ def reprocess_batch(request, batch_code):
 @login_required
 def submit_to_protheus(request, batch_code):
     """
-    Submete apenas produtos VALIDADOS para Protheus
-    Produtos com status PENDING ou INVALID são ignorados
+    Submete apenas produtos VALIDADOS para Protheus via API REST
+    Cria um Pedido de Compra no Protheus usando MATA120
     """
+    import requests
+    from datetime import datetime
+    from django.conf import settings
+
     batch = get_object_or_404(ProductBatch, batch_code=batch_code)
+
+    # Apenas POST é permitido
+    if request.method != 'POST':
+        messages.error(request, "Método não permitido.")
+        return redirect('Main:validation_table', batch_code=batch_code)
+
+    # Recebe dados do formulário modal
+    filial = request.POST.get('filial', '').strip()
+    loja = request.POST.get('loja', '').strip()
+    condicao_pagamento = request.POST.get('condicao_pagamento', '').strip()
+    data_emissao = request.POST.get('data_emissao', '').strip()
+
+    # Validações básicas
+    if not filial:
+        messages.error(request, "Filial (TENANTID) é obrigatória.")
+        return redirect('Main:validation_table', batch_code=batch_code)
+
+    if not loja:
+        messages.error(request, "Loja do fornecedor é obrigatória.")
+        return redirect('Main:validation_table', batch_code=batch_code)
+
+    if not condicao_pagamento:
+        messages.error(request, "Condição de pagamento é obrigatória.")
+        return redirect('Main:validation_table', batch_code=batch_code)
 
     # Filtra apenas produtos com status VALID
     valid_products = Product.objects.filter(batch=batch, validation_status='VALID')
@@ -364,35 +392,96 @@ def submit_to_protheus(request, batch_code):
         messages.warning(request, "Nenhum produto válido para submeter ao Protheus.")
         return redirect('Main:validation_table', batch_code=batch_code)
 
-    # TODO: ADICIONE AQUI A URL DA SUA API PROTHEUS
-    # Exemplo de requisição para cada produto:
-    # for product in valid_products:
-    #     response = requests.post(
-    #         'https://sua-api-protheus.com/pedido-compra',
-    #         headers={'Authorization': f'Bearer {token}'},
-    #         json={
-    #             'codigo': product.product_code,
-    #             'quantidade': product.quantity,
-    #             'valor_unitario': product.unit_value,
-    #             'fornecedor': product.supplier_code,
-    #             # ... outros campos
-    #         }
-    #     )
-    #     if response.status_code == 200:
-    #         product.synced_to_protheus = True
-    #         product.save()
+    # Pega o fornecedor do primeiro produto válido
+    fornecedor = valid_products.first().supplier_code
+    if not fornecedor:
+        messages.error(request, "Código do fornecedor não encontrado nos produtos.")
+        return redirect('Main:validation_table', batch_code=batch_code)
 
-    # Por enquanto, apenas marca como sincronizado (PLACEHOLDER)
+    # Formata data de emissão (se fornecida)
+    if data_emissao:
+        try:
+            # Converte formato YYYY-MM-DD para DD/MM/YYYY
+            data_obj = datetime.strptime(data_emissao, '%Y-%m-%d')
+            data_emissao_formatada = data_obj.strftime('%d/%m/%Y')
+        except ValueError:
+            data_emissao_formatada = datetime.now().strftime('%d/%m/%Y')
+    else:
+        data_emissao_formatada = datetime.now().strftime('%d/%m/%Y')
+
+    # Monta array de itens
+    itens = []
     for product in valid_products:
-        product.synced_to_protheus = True
-        product.save()
+        item = {
+            "produto": product.product_code,
+            "quantidade": float(product.quantity) if product.quantity else 1.0,
+            "preco": float(product.unit_value) if product.unit_value else 0.0,
+            "total": float(product.quantity or 1.0) * float(product.unit_value or 0.0)
+        }
+        itens.append(item)
 
-    batch.synced_to_protheus = True
-    batch.save()
+    # Monta payload para API Protheus
+    payload = {
+        "fornecedor": fornecedor,
+        "loja": loja,
+        "condicao_pagamento": condicao_pagamento,
+        "data_emissao": data_emissao_formatada,
+        "itens": itens
+    }
 
-    messages.success(
-        request,
-        f"{valid_products.count()} produto(s) válido(s) submetido(s) ao Protheus com sucesso!"
-    )
+    # URL da API Protheus (configurável via settings)
+    protheus_api_url = getattr(settings, 'PROTHEUS_API_URL', 'http://localhost:8080')
+    api_endpoint = f"{protheus_api_url}/rest/PRODCHECK/createPedidoCompra"
+
+    try:
+        # Chama API Protheus com header TENANTID
+        response = requests.post(
+            api_endpoint,
+            json=payload,
+            headers={
+                'Content-Type': 'application/json',
+                'tenantid': filial
+            },
+            timeout=30
+        )
+
+        if response.status_code == 200:
+            # Sucesso - marca produtos como sincronizados
+            response_data = response.json()
+            numero_pedido = response_data.get('numero_pedido', 'N/A')
+
+            for product in valid_products:
+                product.synced_to_protheus = True
+                product.protheus_sync_date = datetime.now()
+                product.save()
+
+            batch.synced_to_protheus = True
+            batch.save()
+
+            messages.success(
+                request,
+                f"Pedido de Compra {numero_pedido} criado com sucesso! "
+                f"{valid_products.count()} produto(s) sincronizado(s)."
+            )
+        else:
+            # Erro na API
+            error_message = response.text if response.text else f"Erro HTTP {response.status_code}"
+            messages.error(
+                request,
+                f"Erro ao criar Pedido de Compra no Protheus: {error_message}"
+            )
+            return redirect('Main:validation_table', batch_code=batch_code)
+
+    except requests.exceptions.Timeout:
+        messages.error(request, "Timeout ao conectar com API Protheus. Tente novamente.")
+        return redirect('Main:validation_table', batch_code=batch_code)
+
+    except requests.exceptions.ConnectionError:
+        messages.error(request, "Erro de conexão com API Protheus. Verifique a URL e conectividade.")
+        return redirect('Main:validation_table', batch_code=batch_code)
+
+    except Exception as e:
+        messages.error(request, f"Erro ao submeter ao Protheus: {str(e)}")
+        return redirect('Main:validation_table', batch_code=batch_code)
 
     return redirect('Main:product_list')
