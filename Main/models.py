@@ -42,6 +42,9 @@ class ProductBatch(models.Model):
     # Fornecedor code provided by user (OPTIONAL - remove blank=True, null=True to make REQUIRED)
     fornecedor_code = models.CharField(max_length=50, null=True, blank=True, verbose_name='Código do Fornecedor')
 
+    # Product group code provided by user for normalization
+    product_group = models.CharField(max_length=50, null=True, blank=True, verbose_name='Grupo de Produtos')
+
     synced_to_protheus = models.BooleanField(default=False)
     synced_at = models.DateTimeField(null=True, blank=True)
 

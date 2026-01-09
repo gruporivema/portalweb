@@ -162,16 +162,22 @@ def upload_history(request):
 @login_required
 def filter_selection(request, batch_code):
     """
-    View para entrada de código do fornecedor
+    View para entrada de fornecedor e grupo de produtos
     """
     batch = get_object_or_404(ProductBatch, batch_code=batch_code)
 
     if request.method == 'POST':
-        # Get fornecedor code from user input and save to batch
+        # Get fornecedor code and product group from user input
         fornecedor_code = request.POST.get('fornecedor_code', '').strip()
+        product_group = request.POST.get('product_group', '').strip()
+
+        # Save to batch
         if fornecedor_code:
             batch.fornecedor_code = fornecedor_code
-            batch.save()
+        if product_group:
+            batch.product_group = product_group
+
+        batch.save()
 
         # Redirect to validation table
         return redirect('Main:validation_table', batch_code=batch_code)
@@ -214,6 +220,7 @@ def validation_table(request, batch_code):
 def validate_codes(request):
     """
     API endpoint para validar códigos de produto e fornecedor
+    Aplica normalização antes da validação
     """
     if request.method == 'POST':
         product_ids = request.POST.getlist('product_ids[]')
@@ -221,8 +228,34 @@ def validate_codes(request):
         for product_id in product_ids:
             product = Product.objects.get(pk=product_id)
 
-            # Validate product code
-            product_valid = validate_product_code(product.product_code, product.product_group)
+            # Get batch-level product_group and fornecedor for normalization
+            batch = product.batch
+            product_group = batch.product_group
+            fornecedor = batch.fornecedor_code
+
+            # Store original code for reference
+            original_code = product.product_code
+
+            # Normalize product code based on GRUPO and FORNECEDOR
+            normalized_code = normalize_product_code(original_code, product_group, fornecedor)
+
+            # Update product code with normalized value
+            product.product_code = normalized_code
+
+            # Special handling for GRUPO 0007 (TATU): try without dots first, then with dots
+            if product_group == "0007" and fornecedor == "TATU":
+                # First attempt: validate without dots
+                product_valid = validate_product_code(normalized_code, product_group)
+
+                # If validation fails, try with dots
+                if not product_valid:
+                    code_with_dots = normalize_product_code_with_dots_0007(normalized_code)
+                    product.product_code = code_with_dots
+                    product_valid = validate_product_code(code_with_dots, product_group)
+            else:
+                # Standard validation for other groups
+                product_valid = validate_product_code(normalized_code, product_group)
+
             product.product_code_validated = product_valid
 
             # Validate supplier code
@@ -263,6 +296,138 @@ def validate_codes(request):
         return JsonResponse({'success': True})
 
     return JsonResponse({'success': False}, status=400)
+
+
+def normalize_product_code(product_code, product_group, fornecedor):
+    """
+    Normaliza o código do produto baseado no grupo e fornecedor
+
+    Args:
+        product_code (str): Código original do produto
+        product_group (str): Grupo de produtos selecionado
+        fornecedor (str): Fornecedor selecionado
+
+    Returns:
+        str: Código normalizado (ou original se não houver regra)
+    """
+    if not product_code:
+        return product_code
+
+    # Remove espaços em branco
+    code = str(product_code).strip()
+
+    # GRUPO 0052 (JF)
+    if product_group == "0052" and fornecedor == "JF":
+        # Remove letras e mantém apenas números
+        numbers_only = ''.join(filter(str.isdigit, code))
+        # Garante 8 números (pad com zeros à direita se necessário)
+        numbers_only = numbers_only.ljust(8, '0')[:8]
+        # Adiciona ponto após os primeiros 2 números
+        if len(numbers_only) >= 2:
+            return f"{numbers_only[:2]}.{numbers_only[2:]}"
+        return numbers_only
+
+    # GRUPO 0009 (VENCE TUDO) - Sem mudanças
+    elif product_group == "0009":
+        return code
+
+    # GRUPO 0008 (JAN)
+    elif product_group == "0008" and fornecedor == "JAN":
+        # Remove tudo que não é número
+        numbers_only = ''.join(filter(str.isdigit, code))
+        # Deve ter 18 números, remove os primeiros 10
+        if len(numbers_only) >= 18:
+            last_8 = numbers_only[10:18]
+        else:
+            # Se não tem 18, usa os últimos 8 disponíveis
+            last_8 = numbers_only[-8:] if len(numbers_only) >= 8 else numbers_only.zfill(8)
+
+        # Formata: XXX.XX.XXX
+        if len(last_8) >= 8:
+            return f"{last_8[:3]}.{last_8[3:5]}.{last_8[5:]}"
+        return last_8
+
+    # GRUPO 0007 (TATU) - Retorna código sem formatação (validação dual será feita depois)
+    elif product_group == "0007" and fornecedor == "TATU":
+        # Remove tudo que não é número
+        numbers_only = ''.join(filter(str.isdigit, code))
+        return numbers_only
+
+    # GRUPO 0005 (MACDON)
+    elif product_group == "0005" and fornecedor == "MACDON":
+        # Remove zero inicial se existir
+        while code.startswith('0') and len(code) > 1:
+            code = code[1:]
+        return code
+
+    # GRUPO 0004 (JUMIL)
+    elif product_group == "0004" and fornecedor == "JUMIL":
+        # Remove tudo que não é número
+        numbers_only = ''.join(filter(str.isdigit, code))
+        # Pad com zeros à esquerda se necessário para ter 7 dígitos
+        numbers_only = numbers_only.zfill(7)
+        # Formata: XX.XX.XXX
+        if len(numbers_only) >= 7:
+            return f"{numbers_only[:2]}.{numbers_only[2:4]}.{numbers_only[4:7]}"
+        return numbers_only
+
+    # GRUPO 0003 (JACTO)
+    elif product_group == "0003" and fornecedor == "JACTO":
+        # Remove tudo que não é número
+        numbers_only = ''.join(filter(str.isdigit, code))
+
+        if len(numbers_only) == 4:
+            # 4 dígitos: 001.164 (preenche com zeros na frente)
+            return f"00{numbers_only[0]}.{numbers_only[1:]}"
+        elif len(numbers_only) == 7:
+            # 7 dígitos: 125.5351
+            return f"{numbers_only[:3]}.{numbers_only[3:]}"
+        else:
+            # Tenta detectar o padrão baseado no tamanho
+            if len(numbers_only) <= 4:
+                padded = numbers_only.zfill(4)
+                return f"00{padded[0]}.{padded[1:]}"
+            else:
+                # Assume formato de 7 dígitos
+                return f"{numbers_only[:3]}.{numbers_only[3:]}"
+
+    # GRUPO 0002 (KUHN) - Sem mudanças
+    elif product_group == "0002" and fornecedor == "KUHN":
+        return code
+
+    # GRUPO 0001 (HORSH) - Sem mudanças
+    elif product_group == "0001" and fornecedor == "HORSH":
+        return code
+
+    # OUTROS - Sem mudanças
+    elif product_group == "OUTROS" or fornecedor == "OUTROS":
+        return code
+
+    # Se não houver regra específica, retorna código original
+    return code
+
+
+def normalize_product_code_with_dots_0007(product_code):
+    """
+    Normaliza código do GRUPO 0007 (TATU) com pontos: XXX.XXXX.XXX
+
+    Args:
+        product_code (str): Código do produto (apenas números)
+
+    Returns:
+        str: Código formatado com pontos
+    """
+    # Remove tudo que não é número
+    numbers_only = ''.join(filter(str.isdigit, str(product_code)))
+
+    # Formata: XXX.XXXX.XXX
+    if len(numbers_only) >= 10:
+        return f"{numbers_only[:3]}.{numbers_only[3:7]}.{numbers_only[7:10]}"
+    elif len(numbers_only) >= 7:
+        # Se tiver menos de 10, tenta adaptar
+        return f"{numbers_only[:3]}.{numbers_only[3:7]}.{numbers_only[7:]}"
+
+    return numbers_only
 
 
 def validate_product_code(product_code, product_group):
