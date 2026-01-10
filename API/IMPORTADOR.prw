@@ -55,7 +55,7 @@ User Function IMPPEDCOM()
     // Arquivo Excel
     @ 070,010 SAY "Arquivo Excel:" SIZE 050,010 OF oDlg PIXEL FONT oFont
     @ 068,070 MSGET oGet VAR cArquivo SIZE 230,012 OF oDlg PIXEL READONLY
-    @ 068,305 BUTTON "..." SIZE 020,012 OF oDlg PIXEL ACTION (cArquivo := cGetFile("Arquivos Excel (*.xls;*.xlsx)|*.xls;*.xlsx","Selecione o arquivo",1,"",.T.,GETF_LOCALHARD+GETF_NETWORKDRIVE,.F.,.F.), oGet:Refresh())
+    @ 068,305 BUTTON "..." SIZE 020,012 OF oDlg PIXEL ACTION (cArquivo := cGetFile("Arquivos Excel (*.csv;*.xml)|*.csv;*.xml","Selecione o arquivo",1,"",.T.,GETF_LOCALHARD+GETF_NETWORKDRIVE,.F.,.F.), oGet:Refresh())
     
     @ 090,010 BUTTON "Importar Dados" SIZE 060,015 OF oDlg PIXEL ACTION (aItens := fImportaExcel(cArquivo, cGrupo, cFornece), fMontaBrowse(oDlg, @oBrowse, aItens))
     @ 090,075 BUTTON "Ver Logs" SIZE 040,015 OF oDlg PIXEL ACTION (fExibeLog())
@@ -211,16 +211,17 @@ Static Function fProcessaPlanilha(aDados, cGrupo, cFornece)
 
         // Monta linha final (MESMA estrutura que você já tinha)
        // Monta linha final
-        aAdd(aLinha, cProdNorm)                        // [1] Produto
-        aAdd(aLinha, Val(aCSV[2]))                     // [2] Quantidade
-        aAdd(aLinha, Val(aCSV[3]))                     // [3] Valor Unitário
-        aAdd(aLinha, Val(aCSV[4]))                     // [4] Desconto
-        aAdd(aLinha, Val(aCSV[5]))                     // [5] ICMS
-        aAdd(aLinha, Val(aCSV[6]))                     // [6] Base ICMS
-        aAdd(aLinha, 0)                                // [7] Alíquota ICMS (NÃO VEM NO CSV)
-        aAdd(aLinha, Val(aCSV[7]))                     // [8] Alíquota IPI
-        aAdd(aLinha, "")                               // [9] Status
-        aAdd(aLinha, "")                               // [10] Motivo
+        aAdd(aLinha, cProdNorm)                         // [1] Produto
+        aAdd(aLinha, fValDecimal(aCSV[2], 6))           // [2] Quantidade
+        aAdd(aLinha, fValDecimal(aCSV[3], 6))           // [3] Valor Unitário
+        aAdd(aLinha, fValDecimal(aCSV[4], 6))           // [4] Desconto
+        aAdd(aLinha, fValDecimal(aCSV[5], 6))           // [5] ICMS
+        aAdd(aLinha, fValDecimal(aCSV[6], 6))           // [6] Base ICMS
+        aAdd(aLinha, 0)                                 // [7] Alíquota ICMS
+        aAdd(aLinha, fValDecimal(aCSV[7], 6))           // [8] Alíquota IPI
+        aAdd(aLinha, "")                                // [9] Status
+        aAdd(aLinha, "")                                // [10] Motivo
+
         // VALIDAÇÃO 1: Produto existe
         If !fProdutoExiste(cProdNorm)
             cMotivo := "Produto não encontrado no cadastro"
@@ -244,6 +245,30 @@ Static Function fProcessaPlanilha(aDados, cGrupo, cFornece)
     Next nI
 
 Return aRet
+
+Static Function fValDecimal(cValor, nDec)
+    Local nRet := 0
+    Local cTmp := AllTrim(cValor)
+
+    If Empty(cTmp)
+        Return 0
+    EndIf
+
+    // Remove separador de milhar (.)
+    cTmp := StrTran(cTmp, ".", "")
+
+    // Troca vírgula por ponto
+    cTmp := StrTran(cTmp, ",", ".")
+
+    nRet := Val(cTmp)
+
+    // Ajusta casas decimais
+    If nDec > 0
+        nRet := Round(nRet, nDec)
+    EndIf
+
+Return nRet
+
 
 
 /*/{Protheus.doc} fNormalizaProduto
@@ -380,11 +405,9 @@ Static Function fProdutoExiste(cProduto)
     
     If SB1->(DbSeek(xFilial("SB1") + cProduto))
 
-        If ALLTRIM(SB1->B1_COD) == ALLTRIM(cProduto)
-            lRet := .F.
+        If ALLTRIM(SB1->B1_COD) == ALLTRIM(cProduto) .AND. SB1->B1_MSBLQL =='2'
+            lRet := .T.
         EndIf 
-
-    lRet := .T.
 
     EndIf
     
@@ -671,15 +694,15 @@ Static Function fGeraPedido(aItens, cFornece, cLoja, cCondPag, dEmissao)
         DbSelectArea("SC7")
         SC7->(DbSetOrder(1))
         
-        If SC7->(DbSeek(xFilial("SC7") + cNumPC))
-            ConOut("CONFIRMADO: Pedido " + cNumPC + " encontrado na base")
+        If SC7->(DbSeek(xFilial("SC7") + SC7->C7_NUM))
+            ConOut("CONFIRMADO: Pedido " + SC7->C7_NUM + " encontrado na base")
             ConOut("Primeiro produto: " + SC7->C7_PRODUTO)
             ConOut("Quantidade: " + cValToChar(SC7->C7_QUANT))
         Else
-            ConOut("ATENÇÃO: Pedido " + cNumPC + " NÃO encontrado na base após ExecAuto")
+            ConOut("ATENÇÃO: Pedido " + SC7->C7_NUM + " NÃO encontrado na base após ExecAuto")
         EndIf
         
-        MsgInfo("Pedido de Compra " + cNumPC + " gerado com sucesso!" + CRLF + ;
+        MsgInfo("Pedido de Compra " + SC7->C7_NUM + " gerado com sucesso!" + CRLF + ;
                 "Fornecedor: " + cFornece + "/" + cLoja + CRLF + ;
                 "Total de itens: " + cValToChar(Len(aItensPC)), "Sucesso")
         
