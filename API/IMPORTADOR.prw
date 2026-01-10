@@ -53,7 +53,7 @@ User Function IMPPEDCOM()
     @ 053,070 MSGET dEmissao SIZE 050,012 OF oDlg PIXEL
     
     // Arquivo Excel
-    @ 070,010 SAY "Arquivo Excel:" SIZE 050,010 OF oDlg PIXEL FONT oFont
+    @ 070,010 SAY "Arquivo CSV ou XML:" SIZE 050,010 OF oDlg PIXEL FONT oFont
     @ 068,070 MSGET oGet VAR cArquivo SIZE 230,012 OF oDlg PIXEL READONLY
     @ 068,305 BUTTON "..." SIZE 020,012 OF oDlg PIXEL ACTION (cArquivo := cGetFile("Arquivos Excel (*.csv;*.xml)|*.csv;*.xml","Selecione o arquivo",1,"",.T.,GETF_LOCALHARD+GETF_NETWORKDRIVE,.F.,.F.), oGet:Refresh())
     
@@ -79,7 +79,6 @@ Static Function fImportaExcel(cArquivo, cGrupo, cFornece)
     Local aItens := {}
     Local aLog   := {}
     Local aDados := {}
-    Local oArquivo
 
     If Empty(cArquivo)
         MsgAlert("Selecione um arquivo para importar!", "Atenção")
@@ -101,33 +100,32 @@ Static Function fImportaExcel(cArquivo, cGrupo, cFornece)
         Return aItens
     EndIf
 
-    aLog := {}
+    // ------------------------------------
+    // CSV ou XML
+    // ------------------------------------
+    If Lower(Right(cArquivo, 4)) == ".xml"
+        aDados := fCarregaXMLNFe(cArquivo)
+    Else
+        aDados := fCarregaCSV(cArquivo)
+    EndIf
 
-    // ------------------------------------------------
-    // LE CSV E MONTA aDados (MESMO PAPEL DO EXCEL)
-    // ------------------------------------------------
-    aDados := fCarregaCSV(cArquivo)
-
-    
-
-    If Len(aDados) == 0
-        MsgAlert("Arquivo CSV sem dados válidos!", "Atenção")
+    If ValType(aDados) <> "A" .Or. Len(aDados) == 0
+        MsgAlert("Arquivo sem dados válidos!", "Atenção")
         Return aItens
     EndIf
 
-    // ------------------------------------------------
-    // CHAMADA IDÊNTICA AO EXCEL
-    // ------------------------------------------------
- FWMsgRun( ;
-    NIL, ;
-    {|| aItens := fProcessaPlanilha(aDados, cGrupo, cFornece, @aLog) }, ;
-    "Aguarde", ;
-    "Processando dados..." ;
-)
-
+    // ------------------------------------
+    // Processamento único
+    // ------------------------------------
+    FWMsgRun( ;
+        NIL, ;
+        {|| aItens := fProcessaPlanilha(aDados, cGrupo, cFornece, @aLog) }, ;
+        "Aguarde", ;
+        "Processando dados..." ;
+    )
 
     If Len(aItens) == 0
-        MsgAlert("Nenhum item válido encontrado na planilha!", "Atenção")
+        MsgAlert("Nenhum item válido encontrado!", "Atenção")
     Else
         MsgInfo( ;
             "Total de " + cValToChar(Len(aItens)) + " itens válidos importados!" + CRLF + ;
@@ -137,6 +135,7 @@ Static Function fImportaExcel(cArquivo, cGrupo, cFornece)
     EndIf
 
 Return aItens
+
 
 Static Function fCarregaCSV(cArquivo)
     Local oArquivo
@@ -189,8 +188,17 @@ Static Function fProcessaPlanilha(aDados, cGrupo, cFornece)
     Local cProdNorm := ""
     Local cMotivo := ""
     Local nLinha := 0
+
+
+ConOut("DEBUG PLANILHA - Linha " + cValToChar(nI))
+ConOut("Tipo aCSV: " + ValType(aCSV))
+ConOut("Len aCSV : " + cValToChar(If(ValType(aCSV)=="A", Len(aCSV), 0)))
+
+If ValType(aCSV) == "A"
+    ConOut("Conteúdo aCSV: " + cValToChar(aCSV))
+EndIf
     
-    For nI := 1 To Len(aDados)
+  For nI := 1 To Len(aDados)
 
         nLinha++
         aLinha  := {}
@@ -243,7 +251,7 @@ Static Function fProcessaPlanilha(aDados, cGrupo, cFornece)
         aAdd(aRet, aLinha)
 
     Next nI
-
+    
 Return aRet
 
 Static Function fValDecimal(cValor, nDec)
@@ -782,3 +790,185 @@ Static Function fValidCond(cCondPag, cDescCond)
     EndIf
     
 Return lRet
+
+Static Function fCarregaXMLNFe(cArquivo)
+    Local oFile
+    Local cXml      := ""
+    Local oXml
+    Local oInfNFe
+    Local oDet
+    Local aDados    := {}
+    Local aLinha
+    Local nI
+    Local cError    := ""
+    Local cWarning  := ""
+
+    // ---------------------------------
+    // Validação básica
+    // ---------------------------------
+    If ValType(cArquivo) <> "C" .Or. Empty(AllTrim(cArquivo))
+        ConOut("ERRO XML: caminho inválido -> " + cValToChar(cArquivo))
+        Return aDados
+    EndIf
+
+    If !File(cArquivo)
+        ConOut("ERRO XML: arquivo não encontrado -> " + cArquivo)
+        Return aDados
+    EndIf
+
+    // ---------------------------------
+    // Lê arquivo XML
+    // ---------------------------------
+    oFile := FWFileReader():New(cArquivo)
+    If !oFile:Open()
+        ConOut("ERRO XML: não foi possível abrir arquivo")
+        Return aDados
+    EndIf
+    
+    oFile:Close()
+
+    If Empty(cXml)
+        ConOut("ERRO XML: arquivo vazio")
+        Return aDados
+    EndIf
+
+    // ---------------------------------
+    // Parse do XML
+    // O segundo parâmetro "_" evita erro com tags que são palavras reservadas
+    // ---------------------------------
+    oXml := XmlParser(cXml, "_", @cError, @cWarning)
+
+    If oXml == Nil
+        ConOut("ERRO XML: XmlParser falhou -> " + cError)
+        Return aDados
+    EndIf
+
+    // ---------------------------------
+    // Estrutura NF-e (Atenção ao prefixo "_")
+    // ---------------------------------
+    // Verificamos se a tag raiz é nfeProc ou se o XML começa direto em NFe
+    If Type("oXml:_NFEPROC:_NFE:_INFNFE") <> "U"
+        oInfNFe := oXml:_NFEPROC:_NFE:_INFNFE
+    ElseIf Type("oXml:_NFE:_INFNFE") <> "U"
+        oInfNFe := oXml:_NFE:_INFNFE
+    Else
+        ConOut("ERRO XML: estrutura <infNFe> não encontrada")
+        Return aDados
+    EndIf
+
+    // ---------------------------------
+    // Processamento dos Itens <det>
+    // ---------------------------------
+    // No XmlParser, se houver apenas 1 item, ele vira Objeto. 
+    // Se houver vários, vira Array. O Len() funciona para ambos no Protheus moderno.
+    If Type("oInfNFe:_DET") <> "U"
+        For nI := 1 To Len(oInfNFe:_DET)
+            // Se for apenas 1 item, o acesso é direto, se for array, usa índice
+            oDet := If( Len(oInfNFe:_DET) > 1, oInfNFe:_DET[nI], oInfNFe:_DET )
+            
+            aLinha := fExtraiItemXML(oDet)
+
+            If ValType(aLinha) == "A" .And. Len(aLinha) > 0
+                aAdd(aDados, aLinha)
+            EndIf
+        Next
+    Else
+        ConOut("ERRO XML: nenhum item <det> encontrado")
+    EndIf
+
+Return aDados
+
+Static Function fExtraiItemXML(oDet)
+    Local aLinha := {}
+    Local oProd
+    Local oImp
+    Local cProd := ""
+
+    Local nQtd       := 0
+    Local nVlrUnit  := 0
+    Local nDesc     := 0
+    Local nVlrICMS  := 0
+    Local nBaseICMS := 0
+    Local nAliqICMS := 0
+    Local nAliqIPI  := 0
+
+    // ---------------------------------
+    // PRODUTO
+    // ---------------------------------
+    If oDet == Nil
+        Return Nil
+    EndIf
+
+    oProd := oDet:prod
+    If oProd == Nil
+        Return Nil
+    EndIf
+
+    If Type("oProd:cProd:TEXT") == "U"
+        Return Nil
+    EndIf
+
+    cProd := AllTrim(oProd:cProd:TEXT)
+    If Empty(cProd)
+        Return Nil
+    EndIf
+
+    If Type("oProd:qCom:TEXT") <> "U"
+        nQtd := Val(oProd:qCom:TEXT)
+    EndIf
+
+    If Type("oProd:vUnCom:TEXT") <> "U"
+        nVlrUnit := Val(oProd:vUnCom:TEXT)
+    EndIf
+
+    If Type("oProd:vDesc:TEXT") <> "U"
+        nDesc := Val(oProd:vDesc:TEXT)
+    EndIf
+
+    // ---------------------------------
+    // IMPOSTOS
+    // ---------------------------------
+    oImp := oDet:imposto
+
+    // ICMS (valor, base e alíquota)
+    If oImp <> Nil .And. Type("oImp:ICMS") <> "U"
+
+        // ICMS00
+        If Type("oImp:ICMS:ICMS00") <> "U"
+
+            If Type("oImp:ICMS:ICMS00:vBC:TEXT") <> "U"
+                nBaseICMS := Val(oImp:ICMS:ICMS00:vBC:TEXT)
+            EndIf
+
+            If Type("oImp:ICMS:ICMS00:vICMS:TEXT") <> "U"
+                nVlrICMS := Val(oImp:ICMS:ICMS00:vICMS:TEXT)
+            EndIf
+
+            If Type("oImp:ICMS:ICMS00:pICMS:TEXT") <> "U"
+                nAliqICMS := Val(oImp:ICMS:ICMS00:pICMS:TEXT)
+            EndIf
+
+        EndIf
+    EndIf
+
+    // IPI (somente alíquota)
+    If oImp <> Nil .And. Type("oImp:IPI:IPITRIB:pIPI:TEXT") <> "U"
+        nAliqIPI := Val(oImp:IPI:IPITRIB:pIPI:TEXT)
+    EndIf
+
+    // ---------------------------------
+    // RETORNO PADRÃO (CONTRATO FIXO)
+    // ---------------------------------
+    aLinha := { ;
+        cProd, ;
+        nQtd, ;
+        nVlrUnit, ;
+        nDesc, ;
+        nVlrICMS, ;
+        nBaseICMS, ;
+        nAliqICMS, ;
+        nAliqIPI ;
+    }
+
+Return aLinha
+
