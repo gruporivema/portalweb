@@ -379,7 +379,13 @@ Static Function fProdutoExiste(cProduto)
     SB1->(DbSetOrder(1)) // B1_FILIAL + B1_COD
     
     If SB1->(DbSeek(xFilial("SB1") + cProduto))
-        lRet := .T.
+
+        If ALLTRIM(SB1->B1_COD) == ALLTRIM(cProduto)
+            lRet := .F.
+        EndIf 
+
+    lRet := .T.
+
     EndIf
     
     RestArea(aArea)
@@ -490,115 +496,204 @@ Static Function fMontaBrowse(oDlg, oBrowse, aItens)
     oBrowse:Refresh()
     
 Return
-
-/*/{Protheus.doc} fGeraPedido
-Gera o pedido de compra via ExecAuto (MATA120)
-@type function
-@param aItens, array, Itens validados
-@param cFornece, character, Código do Fornecedor
-@param cLoja, character, Loja do Fornecedor
-@param cCondPag, character, Condição de Pagamento
-@param dEmissao, date, Data de Emissão
-/*/
-Static Function fGeraPedido(aDados, cFornece, cLoja, cCondPag, dEmissao)
-    Local aCab := {}
-    Local aItens := {}
+Static Function fGeraPedido(aItens, cFornece, cLoja, cCondPag, dEmissao)
+    Local aCabec := {}
+    Local aItensPC := {}
     Local aLinha := {}
     Local nI
-    Local lMsErroAuto := .F.
-    Local cDoc
+    Local cNumPC := ""
     Local aArea := GetArea()
-
+    Local nOpcao := 3 // 3=Incluir, 4=Alterar, 5=Excluir
+    Local cLog := ""
     
+    Private lMsErroAuto := .F.
     Private lMsHelpAuto := .T.
     Private lAutoErrNoFile := .T.
     
-    If Len(aDados) == 0
+    
+    If Len(aItens) == 0
+        ConOut("ERRO: Nenhum item válido para gerar pedido")
         MsgAlert("Não há itens válidos para gerar o pedido!", "Atenção")
         Return
     EndIf
     
-    // Validações obrigatórias
+    // LOG 2: Validação de fornecedor
+    ConOut("LOG 2: Validando fornecedor")
+    ConOut("Fornecedor: [" + cFornece + "]")
+    ConOut("Loja: [" + cLoja + "]")
+    
     If Empty(cFornece) .Or. Empty(cLoja)
+        ConOut("ERRO: Fornecedor ou loja vazios")
         MsgAlert("Informe o Fornecedor!", "Atenção")
         Return
     EndIf
     
+    // LOG 3: Validação de condição de pagamento
+    ConOut("LOG 3: Validando condição de pagamento")
+    ConOut("Condição Pagamento: [" + cCondPag + "]")
+    
     If Empty(cCondPag)
+        ConOut("ERRO: Condição de pagamento vazia")
         MsgAlert("Informe a Condição de Pagamento!", "Atenção")
         Return
     EndIf
     
-    If !MsgYesNo("Confirma a geração do Pedido de Compra com " + cValToChar(Len(aItens)) + " itens válidos?", "Confirmação")
+    // LOG 4: Validação de data
+    ConOut("LOG 4: Validando data de emissão")
+    ConOut("Data Emissão: " + DtoC(dEmissao))
+    
+    If Empty(dEmissao)
+        ConOut("ERRO: Data de emissão vazia")
+        MsgAlert("Informe a Data de Emissão!", "Atenção")
         Return
     EndIf
     
-        dbSelectArea("SC7")
-        SC7->(dbSetOrder(1))
-
-        cDoc := GetSXENum("SC7","C7_NUM")
-        While SC7->(dbSeek(xFilial("SC7")+cDoc))
-            ConfirmSX8()
-            cDoc := GetSXENum("SC7","C7_NUM")
-        EndDo
-
-// Monta cabeçalho do pedido
-aCabec := {}
-aadd(aCabec,{"C7_NUM",cDoc})
-aadd(aCabec,{"C7_EMISSAO",dDataBase})
-aadd(aCabec,{"C7_FORNECE",cFornece})
-aadd(aCabec,{"C7_LOJA",cLoja})
-aadd(aCabec,{"C7_COND",cCondPag})
-aadd(aCabec,{"C7_CONTATO","AUTO"})
-aadd(aCabec,{"C7_MOEDA","1",Nil})
-aadd(aCabec,{"C7_TXMOEDA",1.0000,Nil})
-aadd(aCabec,{"C7_FILENT",xFilial("SC7")})
-
-aItens := {}
-
-For nI := 1 To Len(aDados)
-
-    aLinha := {}
-
-    aadd(aLinha, {"C7_ITEM",    StrZero(nI, TamSX3("C7_ITEM")[1]), Nil})
-    aadd(aLinha, {"C7_PRODUTO", aDados[nI,1],                      Nil})
-    aadd(aLinha, {"C7_QUANT",   aDados[nI,2],                      Nil})
-    aadd(aLinha, {"C7_PRECO",   aDados[nI,3],                      Nil})
-    aadd(aLinha, {"C7_TOTAL",   aDados[nI,2] * aDados[nI,3],       Nil})
-    aadd(aLinha, {"C7_VLDESC",  aDados[nI,4],                      Nil})
-    aadd(aLinha, {"C7_VALIPI",  aDados[nI,5],                      Nil})
-    aadd(aLinha, {"C7_BASEICM", aDados[nI,6],                      Nil})
-    aadd(aLinha, {"C7_ALIQIPI", aDados[nI,7],                      Nil})
-    aadd(aLinha, {"C7_DATPRF",  dDataBase + 7,                     Nil})
-
-    aadd(aItens, aLinha)
-
-Next
-
-// Segurança extra (opcional, mas recomendado)
-If Len(aItens) == 0
-    MsgStop("Nenhum item montado para o pedido.")
-    Return
-EndIf
-
-MSExecAuto({|a,b,c,d,e,f,g| MATA120(a,b,c,d)}, 1, aCabec, aItens, 3)
-
-    
-    If lMsErroAuto
-        MostraErro()
-        RollbackSX8()
-        MsgAlert("Erro ao gerar Pedido de Compra! Verifique o log.", "Erro")
-    Else
-        confirmsx8()
-        MsgInfo("Pedido de Compra " + cDoc + " gerado com sucesso!" + CRLF + ;
-                "Total de itens: " + cValToChar(Len(aItens)), "Sucesso")
+    If !MsgYesNo("Confirma a geração do Pedido de Compra com " + cValToChar(Len(aItens)) + " itens válidos?", "Confirmação")
+        ConOut("CANCELADO: Usuário cancelou a operação")
+        Return
     EndIf
+    
+    
+    aCabec := {}
+    
+    aAdd(aCabec, {"C7_EMISSAO", dEmissao,         Nil})
+    
+    aAdd(aCabec, {"C7_FORNECE", cFornece,         Nil})
+    
+    aAdd(aCabec, {"C7_LOJA",    cLoja,            Nil})
+    
+    aAdd(aCabec, {"C7_COND",    cCondPag,         Nil})
+    
+    aAdd(aCabec, {"C7_CONTATO", "AUTO",           Nil})
+    
+    aAdd(aCabec, {"C7_FILENT",  xFilial("SC7"),   Nil})
+    
+        
+    aItensPC := {}
+    For nI := 1 To Len(aItens)
+        
+        aLinha := {}
+        
+        // Campos obrigatórios
+        aAdd(aLinha, {"C7_ITEM",    StrZero(nI, TamSX3("C7_ITEM")[1]), Nil})
+        
+        aAdd(aLinha, {"C7_PRODUTO", aItens[nI,1],                      Nil})
+        
+        aAdd(aLinha, {"C7_QUANT",   aItens[nI,2],                      Nil})
+        
+        aAdd(aLinha, {"C7_PRECO",   aItens[nI,3],                      Nil})
+        
+        aAdd(aLinha, {"C7_TOTAL",   aItens[nI,2] * aItens[nI,3],       Nil})
+        
+        aAdd(aLinha, {"C7_DATPRF",  dEmissao + 7,                      Nil})
+        
+        // Campos opcionais
+        If aItens[nI,4] > 0
+            aAdd(aLinha, {"C7_VLDESC", aItens[nI,4], Nil})
+        EndIf
+        
+        If aItens[nI,5] > 0
+            aAdd(aLinha, {"C7_VALIPI", aItens[nI,5], Nil})
+        EndIf
+        
+        If aItens[nI,6] > 0
+            aAdd(aLinha, {"C7_BASEICM", aItens[nI,6], Nil})
+        EndIf
+        
+        If aItens[nI,7] > 0
+            aAdd(aLinha, {"C7_ALIQICM", aItens[nI,7], Nil})
+        EndIf
+        
+        If aItens[nI,8] > 0
+            aAdd(aLinha, {"C7_ALIQIPI", aItens[nI,8], Nil})
+        EndIf
+        
+        
+        aAdd(aItensPC, aLinha)
+    Next nI
+    
+    
+    
+    If Len(aItensPC) == 0
+        ConOut("ERRO: Nenhum item montado")
+        MsgStop("Nenhum item montado para o pedido.", "Atenção")
+        RollBackSX8()
+        RestArea(aArea)
+        Return
+    EndIf
+    
 
+    ConOut("Iniciando ExecAuto...")
+    
+    MSExecAuto({|v,x,y,z| MATA120(v,x,y,z)}, 1, aCabec, aItensPC, nOpcao)
+    
+    ConOut("ExecAuto finalizado")
+    ConOut("lMsErroAuto: " + If(lMsErroAuto, "TRUE (ERRO)", "FALSE (SUCESSO)"))
+
+    aErroAuto := GetAutoGRLog()
+    For nX := 1 To Len(aErroAuto)
+        ConOut("ERRO[" + StrZero(nX,3) + "]: " + aErroAuto[nX])
+    Next
+    
+    // LOG 10: Tratamento do retorno
+    If lMsErroAuto
+        ConOut("LOG 10: ERRO no ExecAuto")
+        
+        // Desfaz numeração
+        RollBackSX8()
+        ConOut("RollBackSX8() executado")
+        
+        // Exibe log de erro
+        MostraErro()
+        
+        // Captura erro em arquivo
+        cLog := MemoRead("\system\error.log")
+        If !Empty(cLog)
+            ConOut("=== CONTEÚDO DO ERROR.LOG ===")
+            ConOut(cLog)
+            ConOut("=== FIM ERROR.LOG ===")
+        EndIf
+        
+        MsgAlert("Erro ao gerar Pedido de Compra!" + CRLF + ;
+                 "Verifique o console do AppServer para detalhes.", "Erro ExecAuto")
+        
+        ConOut("ERRO DETALHADO:")
+        ConOut("Verifique a tela de erro (MostraErro) que foi exibida")
+        
+    Else
+        ConOut("LOG 10: SUCESSO no ExecAuto")
+        
+        // Confirma numeração
+        ConfirmSX8()
+        ConOut("ConfirmSX8() executado")
+        
+        // Verifica se pedido foi gravado
+        DbSelectArea("SC7")
+        SC7->(DbSetOrder(1))
+        
+        If SC7->(DbSeek(xFilial("SC7") + cNumPC))
+            ConOut("CONFIRMADO: Pedido " + cNumPC + " encontrado na base")
+            ConOut("Primeiro produto: " + SC7->C7_PRODUTO)
+            ConOut("Quantidade: " + cValToChar(SC7->C7_QUANT))
+        Else
+            ConOut("ATENÇÃO: Pedido " + cNumPC + " NÃO encontrado na base após ExecAuto")
+        EndIf
+        
+        MsgInfo("Pedido de Compra " + cNumPC + " gerado com sucesso!" + CRLF + ;
+                "Fornecedor: " + cFornece + "/" + cLoja + CRLF + ;
+                "Total de itens: " + cValToChar(Len(aItensPC)), "Sucesso")
+        
+        ConOut("Pedido " + cNumPC + " gerado com SUCESSO")
+    EndIf
+    
     RestArea(aArea)
-
+    ConOut("RestArea() executado")
+    
+    ConOut(Replicate("=", 80))
+    ConOut("FIM - fGeraPedido")
+    ConOut(Replicate("=", 80))
     
 Return
-
 /*/{Protheus.doc} fValidFor
 Valida Fornecedor
 @type function
