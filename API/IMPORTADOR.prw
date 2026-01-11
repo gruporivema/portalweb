@@ -792,7 +792,6 @@ Static Function fValidCond(cCondPag, cDescCond)
 Return lRet
 
 Static Function fCarregaXMLNFe(cArquivo)
-    Local oFile
     Local cXml      := ""
     Local oXml
     Local oInfNFe
@@ -819,18 +818,14 @@ Static Function fCarregaXMLNFe(cArquivo)
     // ---------------------------------
     // Lê arquivo XML
     // ---------------------------------
-    oFile := FWFileReader():New(cArquivo)
-    If !oFile:Open()
-        ConOut("ERRO XML: não foi possível abrir arquivo")
-        Return aDados
-    EndIf
-    
-    oFile:Close()
+    cXml := MemoRead(cArquivo)
 
     If Empty(cXml)
-        ConOut("ERRO XML: arquivo vazio")
+        ConOut("ERRO XML: arquivo vazio ou não foi possível ler")
         Return aDados
     EndIf
+
+    ConOut("XML lido. Tamanho: " + cValToChar(Len(cXml)) + " bytes")
 
     // ---------------------------------
     // Parse do XML
@@ -843,35 +838,31 @@ Static Function fCarregaXMLNFe(cArquivo)
         Return aDados
     EndIf
 
-    // ---------------------------------
-    // Estrutura NF-e (Atenção ao prefixo "_")
-    // ---------------------------------
-    // Verificamos se a tag raiz é nfeProc ou se o XML começa direto em NFe
-    If Type("oXml:_NFEPROC:_NFE:_INFNFE") <> "U"
-        oInfNFe := oXml:_NFEPROC:_NFE:_INFNFE
-    ElseIf Type("oXml:_NFE:_INFNFE") <> "U"
-        oInfNFe := oXml:_NFE:_INFNFE
+    If Type("oXml:_nfeProc:_NFe:_infNFe") <> "U"
+        oInfNFe := oXml:_nfeProc:_NFe:_infNFe
+    ElseIf Type("oXml:_NFe:_infNFe") <> "U"
+        oInfNFe := oXml:_NFe:_infNFe
     Else
         ConOut("ERRO XML: estrutura <infNFe> não encontrada")
         Return aDados
     EndIf
 
-    // ---------------------------------
-    // Processamento dos Itens <det>
-    // ---------------------------------
-    // No XmlParser, se houver apenas 1 item, ele vira Objeto. 
-    // Se houver vários, vira Array. O Len() funciona para ambos no Protheus moderno.
-    If Type("oInfNFe:_DET") <> "U"
-        For nI := 1 To Len(oInfNFe:_DET)
-            // Se for apenas 1 item, o acesso é direto, se for array, usa índice
-            oDet := If( Len(oInfNFe:_DET) > 1, oInfNFe:_DET[nI], oInfNFe:_DET )
-            
-            aLinha := fExtraiItemXML(oDet)
+    If Type("oInfNFe:_det") <> "U"
+        oDet := oInfNFe:_det
 
+        If ValType(oDet) == "A"
+            For nI := 1 To Len(oDet)
+                aLinha := fExtraiItemXML(oDet[nI])
+                If ValType(aLinha) == "A" .And. Len(aLinha) > 0
+                    aAdd(aDados, aLinha)
+                EndIf
+            Next
+        ElseIf ValType(oDet) == "O"
+            aLinha := fExtraiItemXML(oDet)
             If ValType(aLinha) == "A" .And. Len(aLinha) > 0
                 aAdd(aDados, aLinha)
             EndIf
-        Next
+        EndIf
     Else
         ConOut("ERRO XML: nenhum item <det> encontrado")
     EndIf
@@ -883,91 +874,76 @@ Static Function fExtraiItemXML(oDet)
     Local oProd
     Local oImp
     Local cProd := ""
+    Local cQtd       := ""
+    Local cVlrUnit  := ""
+    Local cDesc     := ""
+    Local cVlrICMS  := ""
+    Local cBaseICMS := ""
+    Local cAliqICMS := ""
+    Local cAliqIPI  := ""
 
-    Local nQtd       := 0
-    Local nVlrUnit  := 0
-    Local nDesc     := 0
-    Local nVlrICMS  := 0
-    Local nBaseICMS := 0
-    Local nAliqICMS := 0
-    Local nAliqIPI  := 0
-
-    // ---------------------------------
-    // PRODUTO
-    // ---------------------------------
     If oDet == Nil
         Return Nil
     EndIf
 
-    oProd := oDet:prod
-    If oProd == Nil
+    If Type("oDet:_prod") == "U"
         Return Nil
     EndIf
 
-    If Type("oProd:cProd:TEXT") == "U"
+    oProd := oDet:_prod
+
+    If Type("oProd:_cProd:Text") == "U"
         Return Nil
     EndIf
 
-    cProd := AllTrim(oProd:cProd:TEXT)
+    cProd := AllTrim(oProd:_cProd:Text)
     If Empty(cProd)
         Return Nil
     EndIf
 
-    If Type("oProd:qCom:TEXT") <> "U"
-        nQtd := Val(oProd:qCom:TEXT)
+    If Type("oProd:_qCom:Text") <> "U"
+        cQtd := AllTrim(oProd:_qCom:Text)
     EndIf
 
-    If Type("oProd:vUnCom:TEXT") <> "U"
-        nVlrUnit := Val(oProd:vUnCom:TEXT)
+    If Type("oProd:_vUnCom:Text") <> "U"
+        cVlrUnit := AllTrim(oProd:_vUnCom:Text)
     EndIf
 
-    If Type("oProd:vDesc:TEXT") <> "U"
-        nDesc := Val(oProd:vDesc:TEXT)
+    If Type("oProd:_vDesc:Text") <> "U"
+        cDesc := AllTrim(oProd:_vDesc:Text)
     EndIf
 
-    // ---------------------------------
-    // IMPOSTOS
-    // ---------------------------------
-    oImp := oDet:imposto
+    If Type("oDet:_imposto") <> "U"
+        oImp := oDet:_imposto
 
-    // ICMS (valor, base e alíquota)
-    If oImp <> Nil .And. Type("oImp:ICMS") <> "U"
-
-        // ICMS00
-        If Type("oImp:ICMS:ICMS00") <> "U"
-
-            If Type("oImp:ICMS:ICMS00:vBC:TEXT") <> "U"
-                nBaseICMS := Val(oImp:ICMS:ICMS00:vBC:TEXT)
+        If Type("oImp:_ICMS:_ICMS00") <> "U"
+            If Type("oImp:_ICMS:_ICMS00:_vBC:Text") <> "U"
+                cBaseICMS := AllTrim(oImp:_ICMS:_ICMS00:_vBC:Text)
             EndIf
 
-            If Type("oImp:ICMS:ICMS00:vICMS:TEXT") <> "U"
-                nVlrICMS := Val(oImp:ICMS:ICMS00:vICMS:TEXT)
+            If Type("oImp:_ICMS:_ICMS00:_vICMS:Text") <> "U"
+                cVlrICMS := AllTrim(oImp:_ICMS:_ICMS00:_vICMS:Text)
             EndIf
 
-            If Type("oImp:ICMS:ICMS00:pICMS:TEXT") <> "U"
-                nAliqICMS := Val(oImp:ICMS:ICMS00:pICMS:TEXT)
+            If Type("oImp:_ICMS:_ICMS00:_pICMS:Text") <> "U"
+                cAliqICMS := AllTrim(oImp:_ICMS:_ICMS00:_pICMS:Text)
             EndIf
+        EndIf
 
+        If Type("oImp:_IPI:_IPITrib:_pIPI:Text") <> "U"
+            cAliqIPI := AllTrim(oImp:_IPI:_IPITrib:_pIPI:Text)
         EndIf
     EndIf
 
-    // IPI (somente alíquota)
-    If oImp <> Nil .And. Type("oImp:IPI:IPITRIB:pIPI:TEXT") <> "U"
-        nAliqIPI := Val(oImp:IPI:IPITRIB:pIPI:TEXT)
-    EndIf
-
-    // ---------------------------------
-    // RETORNO PADRÃO (CONTRATO FIXO)
-    // ---------------------------------
     aLinha := { ;
         cProd, ;
-        nQtd, ;
-        nVlrUnit, ;
-        nDesc, ;
-        nVlrICMS, ;
-        nBaseICMS, ;
-        nAliqICMS, ;
-        nAliqIPI ;
+        cQtd, ;
+        cVlrUnit, ;
+        cDesc, ;
+        cVlrICMS, ;
+        cBaseICMS, ;
+        cAliqIPI, ;
+        cAliqICMS ;
     }
 
 Return aLinha
