@@ -217,18 +217,18 @@ EndIf
         // Normaliza produto
         cProdNorm := fNormalizaProduto(cProduto, cGrupo, cFornece)
 
-        // Monta linha final (MESMA estrutura que você já tinha)
-       // Monta linha final
+            // Monta linha final (MESMA estrutura que você já tinha)
+       // Monta linha final (PADRÃO ÚNICO)
         aAdd(aLinha, cProdNorm)                         // [1] Produto
         aAdd(aLinha, fValDecimal(aCSV[2], 6))           // [2] Quantidade
         aAdd(aLinha, fValDecimal(aCSV[3], 6))           // [3] Valor Unitário
         aAdd(aLinha, fValDecimal(aCSV[4], 6))           // [4] Desconto
-        aAdd(aLinha, fValDecimal(aCSV[5], 6))           // [5] ICMS
+        aAdd(aLinha, fValDecimal(aCSV[5], 6))           // [5] Valor ICMS
         aAdd(aLinha, fValDecimal(aCSV[6], 6))           // [6] Base ICMS
-        aAdd(aLinha, 0)                                 // [7] Alíquota ICMS
-        aAdd(aLinha, fValDecimal(aCSV[7], 6))           // [8] Alíquota IPI
+        aAdd(aLinha, fValDecimal(aCSV[7], 6))           // [7] Alíquota IPI
         aAdd(aLinha, "")                                // [9] Status
         aAdd(aLinha, "")                                // [10] Motivo
+
 
         // VALIDAÇÃO 1: Produto existe
         If !fProdutoExiste(cProdNorm)
@@ -253,31 +253,42 @@ EndIf
     Next nI
     
 Return aRet
-
 Static Function fValDecimal(cValor, nDec)
     Local nRet := 0
-    Local cTmp := AllTrim(cValor)
 
-    If Empty(cTmp)
+    If ValType(cValor) <> "C"
         Return 0
     EndIf
 
-    // Remove separador de milhar (.)
-    cTmp := StrTran(cTmp, ".", "")
+    cValor := AllTrim(cValor)
 
-    // Troca vírgula por ponto
-    cTmp := StrTran(cTmp, ",", ".")
+    If Empty(cValor)
+        Return 0
+    EndIf
 
-    nRet := Val(cTmp)
+    // Remove espaços
+    cValor := StrTran(cValor, " ", "")
 
-    // Ajusta casas decimais
+    /*
+        REGRA:
+        - Se tiver vírgula, assume CSV/planilha brasileira
+        - Se tiver ponto, assume XML
+        - Nunca existe milhar nos seus arquivos
+    */
+
+    If "," $ cValor
+        // CSV: troca vírgula por ponto
+        cValor := StrTran(cValor, ".", "") // segurança (milhar)
+        cValor := StrTran(cValor, ",", ".")
+    EndIf
+
+    nRet := Val(cValor)
+
     If nDec > 0
         nRet := Round(nRet, nDec)
     EndIf
 
 Return nRet
-
-
 
 /*/{Protheus.doc} fNormalizaProduto
 Normaliza código do produto conforme regras por grupo e fornecedor
@@ -466,66 +477,99 @@ Return
 /*/{Protheus.doc} fExibeLog
 Exibe tela com log de validações
 @type function
-/*/
-Static Function fExibeLog()
+/*/Static Function fExibeLog()
     Local oDlgLog
     Local oBrwLog
     Local aHeader := {"Linha", "Cód. Original", "Cód. Normalizado", "Motivo Rejeição"}
-    
+
     If Len(aLog) == 0
         MsgInfo("Nenhum erro de validação registrado!", "Log")
         Return
     EndIf
-    
-    DEFINE MSDIALOG oDlgLog TITLE "Log de Validações - Itens Rejeitados" FROM 000,000 TO 400,800 PIXEL
-    
-    oBrwLog := TCBrowse():New(010,010,390,180,,aHeader,,oDlgLog,,,,,,,,,,,,.F.,,.T.,,.F.,,,)
+
+    DEFINE MSDIALOG oDlgLog ;
+        TITLE "Log de Validações - Itens Rejeitados" ;
+        FROM 000,000 TO 400,800 PIXEL
+
+    oBrwLog := TCBrowse():New( ;
+        010,010,390,180,, ;
+        aHeader,, ;
+        oDlgLog,,,,,,,,,,,, ;
+        .F.,,.T.,,.F.,,, )
+
     oBrwLog:SetArray(aLog)
-    
-    oBrwLog:bLine := {|| {;
-        Transform(aLog[oBrwLog:nAt,1], "@E 999,999"),;
-        aLog[oBrwLog:nAt,2],;
-        aLog[oBrwLog:nAt,3],;
-        aLog[oBrwLog:nAt,4]}}
-    
-    @ 175,350 BUTTON "Fechar" SIZE 040,012 OF oDlgLog PIXEL ACTION oDlgLog:End()
-    
+
+    oBrwLog:bLine := {|| { ;
+        Transform(aLog[oBrwLog:nAt,1], "@E 999,999"), ;
+        aLog[oBrwLog:nAt,2], ;
+        aLog[oBrwLog:nAt,3], ;
+        aLog[oBrwLog:nAt,4] } }
+
+    @ 175,350 BUTTON "Fechar" SIZE 040,012 OF oDlgLog PIXEL ;
+        ACTION oDlgLog:End()
+
     ACTIVATE MSDIALOG oDlgLog CENTERED
-    
+
 Return
+
 
 /*/{Protheus.doc} fMontaBrowse
 Monta browse com os dados importados
 @type function
 /*/
 Static Function fMontaBrowse(oDlg, oBrowse, aItens)
-    Local aHeader := {"Produto", "Quantidade", "Vlr Unit", "Desconto", "ICMS", "Base ICMS", "Aliq ICMS", "Aliq IPI", "Status"}
-    
+    Local aHeader := { ;
+        "Produto", ;
+        "Quantidade", ;
+        "Vlr Unit", ;
+        "Desconto", ;
+        "ICMS", ;
+        "Base ICMS", ;
+        "Aliq ICMS", ;
+        "Aliq IPI", ;
+        "Status" ;
+    }
+
+    // ------------------------------------
+    // Remove browse anterior (se existir)
+    // ------------------------------------
     If oBrowse != Nil
-        oBrowse:DeActivate()
         oBrowse:Hide()
+        oBrowse := Nil
     EndIf
-    
-    If Len(aItens) == 0
+
+    If ValType(aItens) <> "A" .Or. Len(aItens) == 0
         Return
     EndIf
-    
-    oBrowse := TCBrowse():New(110,010,330,150,,aHeader,,oDlg,,,,,,,,,,,,.F.,,.T.,,.F.,,,)
+
+    // ------------------------------------
+    // Cria novo browse
+    // ------------------------------------
+    oBrowse := TCBrowse():New( ;
+        110,010,330,150,, ;
+        aHeader,, ;
+        oDlg,,,,,,,,,,,, ;
+        .F.,,.T.,,.F.,,, )
+
     oBrowse:SetArray(aItens)
-    
-    oBrowse:bLine := {|| {;
-        aItens[oBrowse:nAt,1],;
-        Transform(aItens[oBrowse:nAt,2], "@E 999,999.99"),;
-        Transform(aItens[oBrowse:nAt,3], "@E 999,999.99"),;
-        Transform(aItens[oBrowse:nAt,4], "@E 999,999.99"),;
-        Transform(aItens[oBrowse:nAt,5], "@E 999,999.99"),;
-        Transform(aItens[oBrowse:nAt,6], "@E 999,999.99"),;
-        Transform(aItens[oBrowse:nAt,7], "@E 99.99"),;
-        Transform(aItens[oBrowse:nAt,8], "@E 99.99"),;
-        aItens[oBrowse:nAt,9]}}
-    
+
+    // ------------------------------------
+    // Define layout das linhas
+    // ------------------------------------
+    oBrowse:bLine := {|| { ;
+        aItens[oBrowse:nAt,1], ;
+        Transform(aItens[oBrowse:nAt,2], "@E 999,999.99"), ;
+        Transform(aItens[oBrowse:nAt,3], "@E 999,999.99"), ;
+        Transform(aItens[oBrowse:nAt,4], "@E 999,999.99"), ;
+        Transform(aItens[oBrowse:nAt,5], "@E 999,999.99"), ;
+        Transform(aItens[oBrowse:nAt,6], "@E 999,999.99"), ;
+        Transform(aItens[oBrowse:nAt,7], "@E 99.99"), ;
+        Transform(aItens[oBrowse:nAt,8], "@E 99.99"), ;
+        aItens[oBrowse:nAt,9] ;
+    } }
+
     oBrowse:Refresh()
-    
+
 Return
 Static Function fGeraPedido(aItens, cFornece, cLoja, cCondPag, dEmissao)
     Local aCabec := {}
@@ -617,27 +661,14 @@ Static Function fGeraPedido(aItens, cFornece, cLoja, cCondPag, dEmissao)
         aAdd(aLinha, {"C7_TOTAL",   aItens[nI,2] * aItens[nI,3],       Nil})
         
         aAdd(aLinha, {"C7_DATPRF",  dEmissao + 7,                      Nil})
-        
-        // Campos opcionais
-        If aItens[nI,4] > 0
-            aAdd(aLinha, {"C7_VLDESC", aItens[nI,4], Nil})
-        EndIf
-        
-        If aItens[nI,5] > 0
-            aAdd(aLinha, {"C7_VALIPI", aItens[nI,5], Nil})
-        EndIf
-        
-        If aItens[nI,6] > 0
-            aAdd(aLinha, {"C7_BASEICM", aItens[nI,6], Nil})
-        EndIf
-        
-        If aItens[nI,7] > 0
-            aAdd(aLinha, {"C7_ALIQICM", aItens[nI,7], Nil})
-        EndIf
-        
-        If aItens[nI,8] > 0
-            aAdd(aLinha, {"C7_ALIQIPI", aItens[nI,8], Nil})
-        EndIf
+
+        aAdd(aLinha, {"C7_VLDESC", aItens[nI,4], Nil})
+
+        aAdd(aLinha, {"C7_VALICM ", aItens[nI,5], Nil})  
+
+        aAdd(aLinha, {"C7_BASEICM", aItens[nI,6], Nil})
+
+        aAdd(aLinha, {"C7_ALIQIPI", aItens[nI,7], Nil})
         
         
         aAdd(aItensPC, aLinha)
@@ -790,7 +821,6 @@ Static Function fValidCond(cCondPag, cDescCond)
     EndIf
     
 Return lRet
-
 Static Function fCarregaXMLNFe(cArquivo)
     Local cXml      := ""
     Local oXml
@@ -816,7 +846,7 @@ Static Function fCarregaXMLNFe(cArquivo)
     EndIf
 
     // ---------------------------------
-    // Lê arquivo XML
+    // Lê e faz parse do XML
     // ---------------------------------
     cXml := MemoRead(cArquivo)
 
@@ -825,12 +855,13 @@ Static Function fCarregaXMLNFe(cArquivo)
         Return aDados
     EndIf
 
+    // Remove BOM UTF-8 se existir
+    If SubStr(cXml, 1, 3) == Chr(239) + Chr(187) + Chr(191)
+        cXml := SubStr(cXml, 4)
+    EndIf
+
     ConOut("XML lido. Tamanho: " + cValToChar(Len(cXml)) + " bytes")
 
-    // ---------------------------------
-    // Parse do XML
-    // O segundo parâmetro "_" evita erro com tags que são palavras reservadas
-    // ---------------------------------
     oXml := XmlParser(cXml, "_", @cError, @cWarning)
 
     If oXml == Nil
@@ -838,34 +869,62 @@ Static Function fCarregaXMLNFe(cArquivo)
         Return aDados
     EndIf
 
-    If Type("oXml:_nfeProc:_NFe:_infNFe") <> "U"
-        oInfNFe := oXml:_nfeProc:_NFe:_infNFe
-    ElseIf Type("oXml:_NFe:_infNFe") <> "U"
-        oInfNFe := oXml:_NFe:_infNFe
+    // ---------------------------------
+    // Acessa _INFNFE seguindo o padrão do exemplo
+    // ---------------------------------
+    If ValType(XmlChildEx(oXml, "_NFEPROC")) == "O"
+        If ValType(XmlChildEx(oXml:_NFEPROC, "_NFE")) == "O"
+            If ValType(XmlChildEx(oXml:_NFEPROC:_NFE, "_INFNFE")) == "O"
+                oInfNFe := oXml:_NFEPROC:_NFE:_INFNFE
+                ConOut("Tag _INFNFE localizada")
+            Else
+                ConOut("ERRO XML: tag _INFNFE não encontrada")
+                Return aDados
+            EndIf
+        Else
+            ConOut("ERRO XML: tag _NFE não encontrada")
+            Return aDados
+        EndIf
     Else
-        ConOut("ERRO XML: estrutura <infNFe> não encontrada")
+        ConOut("ERRO XML: tag _NFEPROC não encontrada")
         Return aDados
     EndIf
 
-    If Type("oInfNFe:_det") <> "U"
-        oDet := oInfNFe:_det
+    // ---------------------------------
+    // Acessa _DET dentro de _INFNFE
+    // ---------------------------------
+    If ValType(XmlChildEx(oInfNFe, "_DET")) == "U"
+        ConOut("ERRO XML: tag _DET não encontrada")
+        Return aDados
+    EndIf
 
-        If ValType(oDet) == "A"
-            For nI := 1 To Len(oDet)
-                aLinha := fExtraiItemXML(oDet[nI])
-                If ValType(aLinha) == "A" .And. Len(aLinha) > 0
-                    aAdd(aDados, aLinha)
-                EndIf
-            Next
-        ElseIf ValType(oDet) == "O"
-            aLinha := fExtraiItemXML(oDet)
+    oDet := oInfNFe:_DET
+
+    // ---------------------------------
+    // Processa os itens
+    // ---------------------------------
+    If ValType(oDet) == "A"
+        ConOut("Total de itens: " + cValToChar(Len(oDet)))
+        
+        For nI := 1 To Len(oDet)
+            aLinha := fExtraiItemXML(oDet[nI])
+            
             If ValType(aLinha) == "A" .And. Len(aLinha) > 0
                 aAdd(aDados, aLinha)
             EndIf
+        Next
+        
+    ElseIf ValType(oDet) == "O"
+        ConOut("Item único encontrado")
+        
+        aLinha := fExtraiItemXML(oDet)
+        
+        If ValType(aLinha) == "A" .And. Len(aLinha) > 0
+            aAdd(aDados, aLinha)
         EndIf
-    Else
-        ConOut("ERRO XML: nenhum item <det> encontrado")
     EndIf
+
+    ConOut("Total processado: " + cValToChar(Len(aDados)) + " itens")
 
 Return aDados
 
@@ -873,8 +932,8 @@ Static Function fExtraiItemXML(oDet)
     Local aLinha := {}
     Local oProd
     Local oImp
-    Local cProd := ""
-    Local cQtd       := ""
+    Local cProd     := ""
+    Local cQtd      := ""
     Local cVlrUnit  := ""
     Local cDesc     := ""
     Local cVlrICMS  := ""
@@ -882,69 +941,144 @@ Static Function fExtraiItemXML(oDet)
     Local cAliqICMS := ""
     Local cAliqIPI  := ""
 
+    ConOut("--- Iniciando extração de item ---")
+
     If oDet == Nil
+        ConOut("ERRO: oDet é Nil")
         Return Nil
     EndIf
 
-    If Type("oDet:_prod") == "U"
+    // ---------------------------------
+    // Acessa tag _PROD
+    // ---------------------------------
+    If ValType(XmlChildEx(oDet, "_PROD")) <> "O"
+        ConOut("ERRO: Tag _PROD não encontrada")
         Return Nil
     EndIf
 
-    oProd := oDet:_prod
+    oProd := oDet:_PROD
+    ConOut("Tag _PROD localizada")
 
-    If Type("oProd:_cProd:Text") == "U"
+    // ---------------------------------
+    // Extrai código do produto
+    // ---------------------------------
+    If ValType(XmlChildEx(oProd, "_CPROD")) <> "O"
+        ConOut("ERRO: Tag _CPROD não encontrada")
         Return Nil
     EndIf
 
-    cProd := AllTrim(oProd:_cProd:Text)
+    // Acessa o conteúdo da tag diretamente
+    cProd := AllTrim(oProd:_CPROD:TEXT)
+    ConOut("Código produto: " + cProd)
+
     If Empty(cProd)
+        ConOut("ERRO: Código do produto vazio")
         Return Nil
     EndIf
 
-    If Type("oProd:_qCom:Text") <> "U"
-        cQtd := AllTrim(oProd:_qCom:Text)
+    // ---------------------------------
+    // Extrai dados do produto
+    // ---------------------------------
+    If ValType(XmlChildEx(oProd, "_QCOM")) == "O"
+        cQtd := AllTrim(oProd:_QCOM:TEXT)
+        ConOut("Quantidade: " + cQtd)
+    Else
+        ConOut("Tag _QCOM não encontrada")
     EndIf
 
-    If Type("oProd:_vUnCom:Text") <> "U"
-        cVlrUnit := AllTrim(oProd:_vUnCom:Text)
+    If ValType(XmlChildEx(oProd, "_VUNCOM")) == "O"
+        cVlrUnit := AllTrim(oProd:_VUNCOM:TEXT)
+        ConOut("Valor Unitário: " + cVlrUnit)
+    Else
+        ConOut("Tag _VUNCOM não encontrada")
     EndIf
 
-    If Type("oProd:_vDesc:Text") <> "U"
-        cDesc := AllTrim(oProd:_vDesc:Text)
+    // vDesc pode não existir no XML
+    If ValType(XmlChildEx(oProd, "_VDESC")) == "O"
+        cDesc := AllTrim(oProd:_VDESC:TEXT)
+        ConOut("Desconto: " + cDesc)
+    Else
+        ConOut("Tag _VDESC não encontrada (opcional)")
+        cDesc := "0"
     EndIf
 
-    If Type("oDet:_imposto") <> "U"
-        oImp := oDet:_imposto
+    // ---------------------------------
+    // Extrai impostos
+    // ---------------------------------
+    If ValType(XmlChildEx(oDet, "_IMPOSTO")) == "O"
+        oImp := oDet:_IMPOSTO
+        ConOut("Tag _IMPOSTO localizada")
 
-        If Type("oImp:_ICMS:_ICMS00") <> "U"
-            If Type("oImp:_ICMS:_ICMS00:_vBC:Text") <> "U"
-                cBaseICMS := AllTrim(oImp:_ICMS:_ICMS00:_vBC:Text)
-            EndIf
+        // ICMS
+        If ValType(XmlChildEx(oImp, "_ICMS")) == "O"
+            ConOut("Tag _ICMS localizada")
+            
+            If ValType(XmlChildEx(oImp:_ICMS, "_ICMS00")) == "O"
+                ConOut("Tag _ICMS00 localizada")
+                
+                If ValType(XmlChildEx(oImp:_ICMS:_ICMS00, "_VBC")) == "O"
+                    cBaseICMS := AllTrim(oImp:_ICMS:_ICMS00:_VBC:TEXT)
+                    ConOut("Base ICMS: " + cBaseICMS)
+                EndIf
 
-            If Type("oImp:_ICMS:_ICMS00:_vICMS:Text") <> "U"
-                cVlrICMS := AllTrim(oImp:_ICMS:_ICMS00:_vICMS:Text)
-            EndIf
+                If ValType(XmlChildEx(oImp:_ICMS:_ICMS00, "_VICMS")) == "O"
+                    cVlrICMS := AllTrim(oImp:_ICMS:_ICMS00:_VICMS:TEXT)
+                    ConOut("Valor ICMS: " + cVlrICMS)
+                EndIf
 
-            If Type("oImp:_ICMS:_ICMS00:_pICMS:Text") <> "U"
-                cAliqICMS := AllTrim(oImp:_ICMS:_ICMS00:_pICMS:Text)
+                If ValType(XmlChildEx(oImp:_ICMS:_ICMS00, "_PICMS")) == "O"
+                    cAliqICMS := AllTrim(oImp:_ICMS:_ICMS00:_PICMS:TEXT)
+                    ConOut("Alíquota ICMS: " + cAliqICMS)
+                EndIf
+            Else
+                ConOut("Tag _ICMS00 não encontrada")
             EndIf
+        Else
+            ConOut("Tag _ICMS não encontrada")
         EndIf
 
-        If Type("oImp:_IPI:_IPITrib:_pIPI:Text") <> "U"
-            cAliqIPI := AllTrim(oImp:_IPI:_IPITrib:_pIPI:Text)
+        // IPI - Note que no XML tem IPINT, não IPITRIB
+        If ValType(XmlChildEx(oImp, "_IPI")) == "O"
+            ConOut("Tag _IPI localizada")
+            
+            // Tenta IPINT (que está no XML)
+            If ValType(XmlChildEx(oImp:_IPI, "_IPINT")) == "O"
+                ConOut("Tag _IPINT localizada")
+                // IPINT não tem alíquota de IPI no XML fornecido
+            Else
+                ConOut("Tag _IPINT não encontrada")
+            EndIf
+            
+            // Tenta IPITRIB também
+            If ValType(XmlChildEx(oImp:_IPI, "_IPITRIB")) == "O"
+                ConOut("Tag _IPITRIB localizada")
+                
+                If ValType(XmlChildEx(oImp:_IPI:_IPITRIB, "_PIPI")) == "O"
+                    cAliqIPI := AllTrim(oImp:_IPI:_IPITRIB:_PIPI:TEXT)
+                    ConOut("Alíquota IPI: " + cAliqIPI)
+                EndIf
+            Else
+                ConOut("Tag _IPITRIB não encontrada")
+            EndIf
+        Else
+            ConOut("Tag _IPI não encontrada")
         EndIf
+    Else
+        ConOut("Tag _IMPOSTO não encontrada")
     EndIf
 
-    aLinha := { ;
-        cProd, ;
-        cQtd, ;
-        cVlrUnit, ;
-        cDesc, ;
-        cVlrICMS, ;
-        cBaseICMS, ;
-        cAliqIPI, ;
-        cAliqICMS ;
-    }
+   aLinha := { ;
+    cProd, ;        // [1] Produto
+    cQtd, ;         // [2] Quantidade
+    cVlrUnit, ;     // [3] Valor Unitário
+    cDesc, ;        // [4] Desconto
+    cVlrICMS, ;     // [5] Valor ICMS
+    cBaseICMS, ;    // [6] Base ICMS
+    cAliqICMS, ;    // [7] Alíquota ICMS
+    cAliqIPI ;      // [8] Alíquota IPI
+}
+
+    ConOut("Item extraído com sucesso")
+    ConOut("--- Fim extração de item ---")
 
 Return aLinha
-
