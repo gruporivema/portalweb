@@ -1009,33 +1009,93 @@ Static Function fExtraiItemXML(oDet)
         oImp := oDet:_IMPOSTO
         ConOut("Tag _IMPOSTO localizada")
 
-        // ICMS
-        If ValType(XmlChildEx(oImp, "_ICMS")) == "O"
-            ConOut("Tag _ICMS localizada")
-            
-            If ValType(XmlChildEx(oImp:_ICMS, "_ICMS00")) == "O"
-                ConOut("Tag _ICMS00 localizada")
-                
-                If ValType(XmlChildEx(oImp:_ICMS:_ICMS00, "_VBC")) == "O"
-                    cBaseICMS := AllTrim(oImp:_ICMS:_ICMS00:_VBC:TEXT)
-                    ConOut("Base ICMS: " + cBaseICMS)
+        // Extrai impostos
+// ---------------------------------
+If ValType(XmlChildEx(oDet, "_IMPOSTO")) == "O"
+    oImp := oDet:_IMPOSTO
+    ConOut("Tag _IMPOSTO localizada")
+
+            // ICMS
+            If ValType(XmlChildEx(oImp, "_ICMS")) == "O"
+                ConOut("Tag _ICMS localizada")
+
+                oICMS := oImp:_ICMS
+                oICMSDet := Nil
+
+                // Descobre dinamicamente qual ICMS existe
+                If ValType(XmlChildEx(oICMS, "_ICMS00")) == "O"
+                    oICMSDet := oICMS:_ICMS00
+                ElseIf ValType(XmlChildEx(oICMS, "_ICMS10")) == "O"
+                    oICMSDet := oICMS:_ICMS10
+                ElseIf ValType(XmlChildEx(oICMS, "_ICMS20")) == "O"
+                    oICMSDet := oICMS:_ICMS20
+                ElseIf ValType(XmlChildEx(oICMS, "_ICMS30")) == "O"
+                    oICMSDet := oICMS:_ICMS30
+                ElseIf ValType(XmlChildEx(oICMS, "_ICMS40")) == "O"
+                    oICMSDet := oICMS:_ICMS40
+                ElseIf ValType(XmlChildEx(oICMS, "_ICMS41")) == "O"
+                    oICMSDet := oICMS:_ICMS41
+                ElseIf ValType(XmlChildEx(oICMS, "_ICMS51")) == "O"
+                    oICMSDet := oICMS:_ICMS51
+                ElseIf ValType(XmlChildEx(oICMS, "_ICMS60")) == "O"
+                    oICMSDet := oICMS:_ICMS60
+                ElseIf ValType(XmlChildEx(oICMS, "_ICMS70")) == "O"
+                    oICMSDet := oICMS:_ICMS70
+                ElseIf ValType(XmlChildEx(oICMS, "_ICMS90")) == "O"
+                    oICMSDet := oICMS:_ICMS90
+
+                // Simples Nacional
+                ElseIf ValType(XmlChildEx(oICMS, "_ICMSSN101")) == "O"
+                    oICMSDet := oICMS:_ICMSSN101
+                ElseIf ValType(XmlChildEx(oICMS, "_ICMSSN102")) == "O"
+                    oICMSDet := oICMS:_ICMSSN102
+                ElseIf ValType(XmlChildEx(oICMS, "_ICMSSN201")) == "O"
+                    oICMSDet := oICMS:_ICMSSN201
+                ElseIf ValType(XmlChildEx(oICMS, "_ICMSSN202")) == "O"
+                    oICMSDet := oICMS:_ICMSSN202
+                ElseIf ValType(XmlChildEx(oICMS, "_ICMSSN500")) == "O"
+                    oICMSDet := oICMS:_ICMSSN500
+                ElseIf ValType(XmlChildEx(oICMS, "_ICMSSN900")) == "O"
+                    oICMSDet := oICMS:_ICMSSN900
                 EndIf
 
-                If ValType(XmlChildEx(oImp:_ICMS:_ICMS00, "_VICMS")) == "O"
-                    cVlrICMS := AllTrim(oImp:_ICMS:_ICMS00:_VICMS:TEXT)
-                    ConOut("Valor ICMS: " + cVlrICMS)
+                // Leitura segura dos campos (existindo, lê)
+                If ValType(oICMSDet) == "O"
+
+                    If ValType(XmlChildEx(oICMSDet, "_CST")) == "O"
+                        cCST := AllTrim(oICMSDet:_CST:TEXT)
+                        ConOut("CST: " + cCST)
+                    EndIf
+
+                    If ValType(XmlChildEx(oICMSDet, "_CSOSN")) == "O"
+                        cCSOSN := AllTrim(oICMSDet:_CSOSN:TEXT)
+                        ConOut("CSOSN: " + cCSOSN)
+                    EndIf
+
+                    If ValType(XmlChildEx(oICMSDet, "_VBC")) == "O"
+                        cBaseICMS := AllTrim(oICMSDet:_VBC:TEXT)
+                        ConOut("Base ICMS: " + cBaseICMS)
+                    EndIf
+
+                    If ValType(XmlChildEx(oICMSDet, "_PICMS")) == "O"
+                        cAliqICMS := AllTrim(oICMSDet:_PICMS:TEXT)
+                        ConOut("Alíquota ICMS: " + cAliqICMS)
+                    EndIf
+
+                    If ValType(XmlChildEx(oICMSDet, "_VICMS")) == "O"
+                        cVlrICMS := AllTrim(oICMSDet:_VICMS:TEXT)
+                        ConOut("Valor ICMS: " + cVlrICMS)
+                    EndIf
+
+                Else
+                    ConOut("Nenhuma estrutura ICMS identificada")
                 EndIf
 
-                If ValType(XmlChildEx(oImp:_ICMS:_ICMS00, "_PICMS")) == "O"
-                    cAliqICMS := AllTrim(oImp:_ICMS:_ICMS00:_PICMS:TEXT)
-                    ConOut("Alíquota ICMS: " + cAliqICMS)
-                EndIf
             Else
-                ConOut("Tag _ICMS00 não encontrada")
+                ConOut("Tag _ICMS não encontrada")
             EndIf
-        Else
-            ConOut("Tag _ICMS não encontrada")
         EndIf
+
 
         // IPI - Note que no XML tem IPINT, não IPITRIB
         If ValType(XmlChildEx(oImp, "_IPI")) == "O"
