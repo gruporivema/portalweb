@@ -308,7 +308,7 @@ Static Function fNormalizaProduto(cCodigo, cGrupo, cFornece)
     EndIf
     
     // GRUPO 0052 (JF)
-    If cGrupo == "0052" .And. Upper(AllTrim(cFornece)) == "JF"
+    If cGrupo == "0052" 
         cNumeros := ""
         For nI := 1 To Len(cRet)
             If IsDigit(SubStr(cRet, nI, 1))
@@ -326,7 +326,7 @@ Static Function fNormalizaProduto(cCodigo, cGrupo, cFornece)
     ElseIf cGrupo == "0009"
         cRet := AllTrim(cCodigo)
         
-    ElseIf cGrupo == "0008" .And. Upper(AllTrim(cFornece)) == "JAN"
+    ElseIf cGrupo == "0008" 
         cNumeros := ""
         For nI := 1 To Len(cRet)
             If IsDigit(SubStr(cRet, nI, 1))
@@ -348,7 +348,7 @@ Static Function fNormalizaProduto(cCodigo, cGrupo, cFornece)
             cRet := cNumeros
         EndIf
         
-    ElseIf cGrupo == "0007" .And. Upper(AllTrim(cFornece)) == "TATU"
+    ElseIf cGrupo == "0007" 
         cNumeros := ""
         For nI := 1 To Len(cRet)
             If IsDigit(SubStr(cRet, nI, 1))
@@ -357,12 +357,12 @@ Static Function fNormalizaProduto(cCodigo, cGrupo, cFornece)
         Next nI
         cRet := cNumeros
         
-    ElseIf cGrupo == "0005" .And. Upper(AllTrim(cFornece)) == "MACDON"
+    ElseIf cGrupo == "0005" 
         While Left(cRet, 1) == "0" .And. Len(cRet) > 1
             cRet := SubStr(cRet, 2)
         EndDo
         
-    ElseIf cGrupo == "0004" .And. Upper(AllTrim(cFornece)) == "JUMIL"
+    ElseIf cGrupo == "0004" 
         cNumeros := ""
         For nI := 1 To Len(cRet)
             If IsDigit(SubStr(cRet, nI, 1))
@@ -376,7 +376,7 @@ Static Function fNormalizaProduto(cCodigo, cGrupo, cFornece)
             cRet := cNumeros
         EndIf
         
-    ElseIf cGrupo == "0003" .And. Upper(AllTrim(cFornece)) == "JACTO"
+    ElseIf cGrupo == "0003" 
         cNumeros := ""
         For nI := 1 To Len(cRet)
             If IsDigit(SubStr(cRet, nI, 1))
@@ -397,13 +397,13 @@ Static Function fNormalizaProduto(cCodigo, cGrupo, cFornece)
             EndIf
         EndIf
         
-    ElseIf cGrupo == "0002" .And. Upper(AllTrim(cFornece)) == "KUHN"
+    ElseIf cGrupo == "0002"
         cRet := AllTrim(cCodigo)
         
-    ElseIf cGrupo == "0001" .And. Upper(AllTrim(cFornece)) == "HORSH"
+    ElseIf cGrupo == "0001"
         cRet := AllTrim(cCodigo)
         
-    ElseIf cGrupo == "OUTROS" .Or. Upper(AllTrim(cFornece)) == "OUTROS"
+    ElseIf cGrupo == "OUTROS" 
         cRet := AllTrim(cCodigo)
     EndIf
     
