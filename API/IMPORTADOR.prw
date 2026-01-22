@@ -77,7 +77,6 @@ Função para importar dados do Excel
 /*/
 Static Function fImportaExcel(cArquivo, cGrupo, cFornece)
     Local aItens := {}
-    Local aLog   := {}
     Local aDados := {}
 
     If Empty(cArquivo)
@@ -376,26 +375,44 @@ Static Function fNormalizaProduto(cCodigo, cGrupo, cFornece)
             cRet := cNumeros
         EndIf
         
-    ElseIf cGrupo == "0003" 
-        cNumeros := ""
-        For nI := 1 To Len(cRet)
-            If IsDigit(SubStr(cRet, nI, 1))
-                cNumeros += SubStr(cRet, nI, 1)
+        ElseIf cGrupo == "0003"
+
+            cNumeros := ""
+
+            // 1) Mantém apenas dígitos
+            For nI := 1 To Len(cRet)
+                If IsDigit(SubStr(cRet, nI, 1))
+                    cNumeros += SubStr(cRet, nI, 1)
+                EndIf
+            Next nI
+
+            // 2) Remove zeros à esquerda
+            Do While Len(cNumeros) > 1 .And. SubStr(cNumeros, 1, 1) == "0"
+                cNumeros := SubStr(cNumeros, 2)
+            EndDo
+
+            // 3) Segurança: se virar vazio
+            If Empty(cNumeros)
+                cNumeros := "0"
             EndIf
-        Next nI
-        If Len(cNumeros) == 4
-            cNumeros := PadL(cNumeros, 4, "0")
-            cRet := "00" + SubStr(cNumeros, 1, 1) + "." + SubStr(cNumeros, 2, 3)
-        ElseIf Len(cNumeros) == 7
-            cRet := SubStr(cNumeros, 1, 3) + "." + SubStr(cNumeros, 4, 4)
-        Else
-            If Len(cNumeros) <= 4
+
+            // 4) Aplica regras de formatação
+            If Len(cNumeros) == 4
                 cNumeros := PadL(cNumeros, 4, "0")
                 cRet := "00" + SubStr(cNumeros, 1, 1) + "." + SubStr(cNumeros, 2, 3)
+
+            ElseIf Len(cNumeros) == 7
+                cRet := SubStr(cNumeros, 1, 3) + "." + SubStr(cNumeros, 4, 4)
+
             Else
-                cRet := SubStr(cNumeros, 1, 3) + "." + SubStr(cNumeros, 4)
+                If Len(cNumeros) <= 4
+                    cNumeros := PadL(cNumeros, 4, "0")
+                    cRet := "00" + SubStr(cNumeros, 1, 1) + "." + SubStr(cNumeros, 2, 3)
+                Else
+                    cRet := SubStr(cNumeros, 1, 3) + "." + SubStr(cNumeros, 4)
+                EndIf
             EndIf
-        EndIf
+
         
     ElseIf cGrupo == "0002"
         cRet := AllTrim(cCodigo)
