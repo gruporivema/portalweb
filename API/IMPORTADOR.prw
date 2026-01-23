@@ -124,6 +124,13 @@ Static Function fImportaExcel(cArquivo, cGrupo, cFornece)
     )
 
     If Len(aItens) == 0
+        If Len(aLog)>0 
+            MsgInfo( ;
+                        "Total de " + cValToChar(Len(aItens)) + " itens válidos importados!" + CRLF + ;
+                        "Itens rejeitados: " + cValToChar(Len(aLog)), ;
+                        "Sucesso" ;
+                    )
+        endif 
         MsgAlert("Nenhum item válido encontrado!", "Atenção")
     Else
         MsgInfo( ;
@@ -224,7 +231,8 @@ EndIf
         aAdd(aLinha, fValDecimal(aCSV[4], 6))           // [4] Desconto
         aAdd(aLinha, fValDecimal(aCSV[5], 6))           // [5] Valor ICMS
         aAdd(aLinha, fValDecimal(aCSV[6], 6))           // [6] Base ICMS
-        aAdd(aLinha, fValDecimal(aCSV[7], 6))           // [7] Alíquota IPI
+        aAdd(aLinha, fValDecimal(aCSV[7], 6))           // [7] Alíquota Icms
+        aAdd(aLinha, fValDecimal(aCSV[8], 6))           // [8] Alíquota IPI
         aAdd(aLinha, "")                                // [9] Status
         aAdd(aLinha, "")                                // [10] Motivo
 
@@ -420,7 +428,7 @@ Static Function fNormalizaProduto(cCodigo, cGrupo, cFornece)
     ElseIf cGrupo == "0001"
         cRet := AllTrim(cCodigo)
         
-    ElseIf cGrupo == "OUTROS" 
+    ElseIf !cGrupo $ ("0001/0002/0003/0004/0005/0006/0007/0008/0009/0052")
         cRet := AllTrim(cCodigo)
     EndIf
     
@@ -865,7 +873,9 @@ Static Function fCarregaXMLNFe(cArquivo)
     // ---------------------------------
     // Lê e faz parse do XML
     // ---------------------------------
-    cXml := MemoRead(cArquivo)
+    cXml := fReadLargeFile(cArquivo)
+
+    ConOut("XML lido. Tamanho: " + cValToChar(Len(cXml)) + " bytes")
 
     If Empty(cXml)
         ConOut("ERRO XML: arquivo vazio ou não foi possível ler")
@@ -1159,3 +1169,82 @@ If ValType(XmlChildEx(oDet, "_IMPOSTO")) == "O"
     ConOut("--- Fim extração de item ---")
 
 Return aLinha
+
+
+/*/{Protheus.doc} fReadLargeFile
+Lê arquivo de qualquer tamanho usando FOpen/FRead/FClose
+@type function
+@param cFile, character, Caminho completo do arquivo
+@return character, Conteúdo do arquivo
+/*/
+Static Function fReadLargeFile(cFile)
+    Local cContent  := ""
+    Local cBuffer   := ""
+    Local nHandle   := 0
+    Local nBytes    := 0
+    Local nTamBloco := 65536  // 64 KB por bloco
+    Local nTentativas := 0
+    Local nMaxTent  := 3
+    
+    // Tenta abrir o arquivo (com retry)
+    While nTentativas < nMaxTent
+        nHandle := FOpen(cFile, 0)  // 0 = FO_READ (somente leitura)
+        
+        If nHandle != -1
+            Exit
+        EndIf
+        
+        nTentativas++
+        ConOut("Tentativa " + cValToChar(nTentativas) + " de abrir arquivo falhou. FError: " + cValToChar(FError()))
+        
+        If nTentativas < nMaxTent
+            Sleep(500)  // Aguarda meio segundo antes de tentar novamente
+        EndIf
+    EndDo
+    
+    If nHandle == -1
+        ConOut("ERRO ao abrir arquivo: " + cFile)
+        ConOut("FError: " + cValToChar(FError()))
+        Return ""
+    EndIf
+    
+    // Lê o arquivo em blocos
+    While .T.
+        cBuffer := Space(nTamBloco)
+        nBytes  := FRead(nHandle, @cBuffer, nTamBloco)
+        
+        If nBytes <= 0
+            Exit
+        EndIf
+        
+        // Adiciona apenas os bytes lidos (remove espaços extras)
+        cContent += SubStr(cBuffer, 1, nBytes)
+        
+        // Opcional: mostrar progresso para arquivos muito grandes
+        // ConOut("Lidos: " + cValToChar(Len(cContent)) + " bytes...")
+    EndDo
+    
+    // Fecha o arquivo
+    FClose(nHandle)
+    
+    ConOut("Arquivo lido com sucesso: " + cValToChar(Len(cContent)) + " bytes")
+    
+Return cContent
+
+/*/{Protheus.doc} fGetFileSize
+Obtém o tamanho do arquivo em bytes (função auxiliar)
+@type function
+@param cFile, character, Caminho do arquivo
+@return numeric, Tamanho em bytes
+/*/
+Static Function fGetFileSize(cFile)
+    Local nHandle := FOpen(cFile, 0)
+    Local nSize   := 0
+    
+    If nHandle != -1
+        FSeek(nHandle, 0, 2)  // FS_END - Move para o final
+        nSize := FSeek(nHandle, 0, 1)  // FS_RELATIVE - Retorna posição atual
+        FClose(nHandle)
+    EndIf
+    
+Return nSize
